@@ -2,7 +2,7 @@ import { createAppTester, tools } from "zapier-platform-core";
 
 import App from "../..";
 import { PureFunction } from "../../types/function";
-import { GetGasPrice, GasPriceResult } from "../../lib/resources/gas_price";
+import { GetGasPrice, GasPriceResult } from "../../lib/resources/gas-price";
 
 describe("gas_price", () => {
   let appTester: ReturnType<typeof createAppTester>;

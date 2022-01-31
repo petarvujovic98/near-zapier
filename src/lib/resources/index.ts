@@ -1,4 +1,4 @@
-import GasPrice from "./gas_price";
+import GasPrice from "./gas-price";
 
 export default {
   [GasPrice.key]: GasPrice,
