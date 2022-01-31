@@ -6,6 +6,7 @@ export enum NetworkType {
   BETANET = "betanet",
 }
 
+/** A network selection field */
 export const NetworkSelectField: Field = {
   key: "network",
   label: "Network",
@@ -31,6 +32,7 @@ export const NetworkSelectField: Field = {
   ],
 };
 
+/** An interface that includes the network parameter. For use with Bundle object */
 export interface WithNetworkSelection {
   network?: NetworkType;
 }
