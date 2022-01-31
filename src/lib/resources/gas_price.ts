@@ -7,11 +7,12 @@ import { OutputItem } from "../../types/operation";
 export type BlockId = Parameters<providers.JsonRpcProvider["gasPrice"]>[0];
 
 export interface GetGasPrice {
-  block_id?: BlockId;
+  blockId?: BlockId;
+  networkUrl?: string;
 }
 
 export interface GasPriceResult extends OutputItem {
-  gas_price: string;
+  gasPrice: string;
 }
 
 export async function performGet(
@@ -19,18 +20,18 @@ export async function performGet(
   { inputData }: Bundle<GetGasPrice>
 ): Promise<GasPriceResult> {
   const rpc = new providers.JsonRpcProvider({
-    url: "https://rpc.testnet.near.org",
+    url: inputData.networkUrl || "https://rpc.testnet.near.org",
   });
 
   z.console.log(
     `Getting gas price with input data: ${JSON.stringify(inputData)}`
   );
 
-  const { gas_price } = await rpc.gasPrice(inputData.block_id || null);
+  const { gas_price: gasPrice } = await rpc.gasPrice(inputData.blockId || null);
 
   z.console.log(`Got gas price successfully`);
 
-  return { id: new Date().toISOString(), gas_price };
+  return { id: new Date().toISOString(), gasPrice };
 }
 
 export default createResource<GasPriceResult>({
@@ -43,11 +44,14 @@ export default createResource<GasPriceResult>({
       description: "Gets gas price by block ID.",
     },
     operation: {
-      inputFields: [{ key: "block_id" }],
+      inputFields: [
+        { key: "blockId", required: false },
+        { key: "networkUrl", required: false },
+      ],
       perform: performGet,
       sample: {
-        id: "0",
-        gas_price: "1",
+        id: new Date().toISOString(),
+        gasPrice: "1",
       },
     },
   },

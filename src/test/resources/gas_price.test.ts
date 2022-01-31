@@ -30,9 +30,9 @@ describe("gas_price", () => {
 
       expect(result).toBeDefined();
 
-      const { gas_price, id } = result;
+      const { gasPrice, id } = result;
 
-      expect(typeof gas_price).toEqual("string");
+      expect(typeof gasPrice).toEqual("string");
 
       const timestamp = new Date(id).getTime();
 
@@ -43,15 +43,15 @@ describe("gas_price", () => {
     test("should return value for given block ID", async () => {
       const result = (await appTester(perform, {
         inputData: {
-          block_id: 80479688,
+          blockId: 80479688,
         },
       })) as GasPriceResult;
 
       expect(result).toBeDefined();
 
-      const { gas_price } = result;
+      const { gasPrice } = result;
 
-      expect(typeof gas_price).toEqual("string");
+      expect(typeof gasPrice).toEqual("string");
     });
   });
 });
