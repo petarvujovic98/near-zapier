@@ -3,12 +3,16 @@ import { Bundle, ZObject } from "zapier-platform-core";
 
 import { createResource } from "../../types/resource";
 import { OutputItem } from "../../types/operation";
+import {
+  getNetwork,
+  WithNetworkSelection,
+  NetworkSelectField,
+} from "../common";
 
 export type BlockId = Parameters<providers.JsonRpcProvider["gasPrice"]>[0];
 
-export interface GetGasPrice {
+export interface GetGasPrice extends WithNetworkSelection {
   blockId?: BlockId;
-  networkUrl?: string;
 }
 
 export interface GasPriceResult extends OutputItem {
@@ -20,7 +24,7 @@ export async function performGet(
   { inputData }: Bundle<GetGasPrice>
 ): Promise<GasPriceResult> {
   const rpc = new providers.JsonRpcProvider({
-    url: inputData.networkUrl || "https://rpc.testnet.near.org",
+    url: getNetwork(inputData),
   });
 
   z.console.log(
@@ -44,10 +48,7 @@ export default createResource<GasPriceResult>({
       description: "Gets gas price by block ID.",
     },
     operation: {
-      inputFields: [
-        { key: "blockId", required: false },
-        { key: "networkUrl", required: false },
-      ],
+      inputFields: [{ key: "blockId", required: false }, NetworkSelectField],
       perform: performGet,
       sample: {
         id: new Date().toISOString(),
