@@ -1,5 +1,7 @@
 import { Bundle, ZObject } from "zapier-platform-core";
 
+import { OutputItem } from "./operation";
+
 /** Source code like {source: "return 1 + 2"} which the system will wrap in
  * a function for you. */
 export interface FunctionSource {
@@ -27,7 +29,7 @@ export interface PureFunction<Input, Output> {
  * Encodes arity and if arguments is used in the body. Note - just write normal functions
  * and the system will encode the pointers for you. Or, provide {source: "return 1 + 2"}
  * and the system will wrap in a function for you. */
-export type FunctionSchema<Input, Output> =
+export type FunctionSchema<Input = unknown, Output = OutputItem> =
   | string
   | FunctionSource
   | FunctionRequire

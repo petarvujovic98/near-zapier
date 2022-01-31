@@ -37,3 +37,16 @@ export interface Request<Type = FlatObject> {
    * before resolving with the response. Defaults to false. */
   skipThrowForStatus?: boolean;
 }
+
+/** A representation of a HTTP redirect - you can use the {{syntax}} to inject
+ * authentication, field or global variables. */
+export interface RedirectRequest {
+  /** The HTTP method for the request. */
+  method?: "GET";
+  /** A URL for the request (we will parse the querystring and merge with params).
+   * Keys and values will not be re-encoded. */
+  url?: string;
+  /** A mapping of the querystring - will get merged with any query params in the URL.
+   * Keys and values will be encoded. */
+  params?: FlatObject;
+}

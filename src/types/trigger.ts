@@ -6,7 +6,10 @@ import {
 import { BasicDisplayHidden, BasicDisplayVisible } from "./display";
 
 /** How will Zapier get notified of new objects? */
-export interface TriggerHidden<Input, Output extends OutputItem = OutputItem> {
+export interface TriggerHidden<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+> {
   /** A key to uniquely identify this trigger. */
   key: string;
   /** A noun for this trigger that completes the sentence "triggers on a new XXX". */
@@ -20,7 +23,10 @@ export interface TriggerHidden<Input, Output extends OutputItem = OutputItem> {
 }
 
 /** How will Zapier get notified of new objects? */
-export interface TriggerVisible<Input, Output extends OutputItem = OutputItem> {
+export interface TriggerVisible<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+> {
   /** A key to uniquely identify this trigger. */
   key: string;
   /** A noun for this trigger that completes the sentence "triggers on a new XXX". */
@@ -34,7 +40,7 @@ export interface TriggerVisible<Input, Output extends OutputItem = OutputItem> {
 }
 
 /** How will Zapier get notified of new objects? */
-export type Trigger<Input, Output extends OutputItem = OutputItem> =
+export type Trigger<Input = unknown, Output extends OutputItem = OutputItem> =
   | TriggerHidden<Input, Output>
   | TriggerVisible<Input, Output>;
 
@@ -44,8 +50,9 @@ export type Trigger<Input, Output extends OutputItem = OutputItem> =
  * @param  {Trigger} definition The trigger definition.
  * @returns Trigger
  */
-export function createTrigger<Input, Output extends OutputItem = OutputItem>(
-  definition: Trigger<Input, Output>
-): Trigger<Input, Output> {
+export function createTrigger<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+>(definition: Trigger<Input, Output>): Trigger<Input, Output> {
   return definition;
 }

@@ -2,7 +2,10 @@ import { BasicDisplayHidden, BasicDisplayVisible } from "./display";
 import { BasicActionOperation, OutputItem } from "./operation";
 
 /** How will Zapier search for existing objects? */
-export interface SearchHidden<Input, Output extends OutputItem = OutputItem> {
+export interface SearchHidden<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+> {
   /** A key to uniquely identify this search. */
   key: string;
   /** A noun for this search that completes the sentence "finds a specific XXX". */
@@ -14,7 +17,10 @@ export interface SearchHidden<Input, Output extends OutputItem = OutputItem> {
 }
 
 /** How will Zapier search for existing objects? */
-export interface SearchVisible<Input, Output extends OutputItem = OutputItem> {
+export interface SearchVisible<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+> {
   /** A key to uniquely identify this search. */
   key: string;
   /** A noun for this search that completes the sentence "finds a specific XXX". */
@@ -26,7 +32,7 @@ export interface SearchVisible<Input, Output extends OutputItem = OutputItem> {
 }
 
 /** How will Zapier get notified of new objects? */
-export type Search<Input, Output extends OutputItem = OutputItem> =
+export type Search<Input = unknown, Output extends OutputItem = OutputItem> =
   | SearchHidden<Input, Output>
   | SearchVisible<Input, Output>;
 
@@ -36,8 +42,9 @@ export type Search<Input, Output extends OutputItem = OutputItem> =
  * @param  {Search} definition The search definition.
  * @returns Search
  */
-export function createSearch<Input, Output extends OutputItem = OutputItem>(
-  definition: Search<Input, Output>
-): Search<Input, Output> {
+export function createSearch<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+>(definition: Search<Input, Output>): Search<Input, Output> {
   return definition;
 }
