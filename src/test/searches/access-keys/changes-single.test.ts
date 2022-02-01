@@ -8,7 +8,7 @@ import {
 } from "../../../lib/searches/access-keys/changes-single";
 import { PureFunctionTester } from "../../../types";
 
-describe("view", () => {
+describe("changes-single", () => {
   let appTester: ReturnType<typeof createAppTester>;
   let perform: PureFunctionTester<
     ViewAccessKeyChangesInput,
@@ -26,7 +26,7 @@ describe("view", () => {
       );
   });
 
-  it("should return access key details", async () => {
+  it("should return access key changes", async () => {
     const [result] = await perform({
       inputData: {
         accountKeyArray: [

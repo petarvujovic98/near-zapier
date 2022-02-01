@@ -8,7 +8,7 @@ import {
 } from "../../../lib/searches/access-keys/list";
 import { PureFunctionTester } from "../../../types";
 
-describe("view", () => {
+describe("list", () => {
   let appTester: ReturnType<typeof createAppTester>;
   let perform: PureFunctionTester<
     ViewAccessKeyListInput,
@@ -25,7 +25,7 @@ describe("view", () => {
       );
   });
 
-  it("should return access key details", async () => {
+  it("should return access key list", async () => {
     const [result] = await perform({
       inputData: {
         accountId: "client.chainlink.testnet",
