@@ -7,13 +7,12 @@ import {
   getNetwork,
   WithNetworkSelection,
   NetworkSelectField,
+  WithBlockIDOrFinality,
 } from "../common";
 
-export type BlockId = Parameters<providers.JsonRpcProvider["gasPrice"]>[0];
-
-export interface GetGasPrice extends WithNetworkSelection {
-  blockId?: BlockId;
-}
+export interface GetGasPrice
+  extends WithNetworkSelection,
+    WithBlockIDOrFinality {}
 
 export interface GasPriceResult extends OutputItem {
   gasPrice: string;

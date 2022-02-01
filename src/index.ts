@@ -1,6 +1,7 @@
 import { version as platformVersion } from "zapier-platform-core";
 
 import resources from "./lib/resources";
+import searches from "./lib/searches";
 import { createApp } from "./types/app";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -11,4 +12,6 @@ export default createApp({
   platformVersion,
 
   resources,
+
+  searches,
 });
