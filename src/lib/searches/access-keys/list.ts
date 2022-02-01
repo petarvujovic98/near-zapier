@@ -6,6 +6,7 @@ import {
 import { Bundle, ZObject } from "zapier-platform-core";
 
 import { OutputItem, createSearch } from "../../../types";
+
 import {
   AccessKeyField,
   AccountIdField,
@@ -15,7 +16,8 @@ import {
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
-} from "../../common";
+  BlockIDOrFinalityField,
+} from "./../../common";
 
 export interface AccessKeyView {
   nonce: number;
@@ -68,7 +70,12 @@ export default createSearch<ViewAccessKeyListInput, ViewAccessKeyListResult>({
   },
   operation: {
     perform,
-    inputFields: [NetworkSelectField, AccountIdField, AccessKeyField],
+    inputFields: [
+      NetworkSelectField,
+      AccountIdField,
+      AccessKeyField,
+      BlockIDOrFinalityField,
+    ],
     sample: {
       id: "1",
       keys: [

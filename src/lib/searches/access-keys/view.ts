@@ -13,6 +13,7 @@ import {
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
+  BlockIDOrFinalityField,
 } from "../../common";
 
 export interface ViewAccessKeyInput
@@ -56,7 +57,12 @@ export default createSearch<ViewAccessKeyInput, ViewAccessKeyResult>({
   },
   operation: {
     perform,
-    inputFields: [NetworkSelectField, AccountIdField, AccessKeyField],
+    inputFields: [
+      NetworkSelectField,
+      AccountIdField,
+      AccessKeyField,
+      BlockIDOrFinalityField,
+    ],
     sample: {
       id: "1",
       nonce: 85,
