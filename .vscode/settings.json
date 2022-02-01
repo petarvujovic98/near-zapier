@@ -1,6 +1,6 @@
 {
-	"jestrunner.configPath": "jest.config.js",
-	"typescript.tsdk": "node_modules/typescript/lib",
+  "jestrunner.configPath": "jest.config.js",
+  "typescript.tsdk": "node_modules/typescript/lib",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },

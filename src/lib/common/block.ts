@@ -13,6 +13,11 @@ export interface WithBlockID {
   blockId: string | number;
 }
 
+/** An interface that represents how the NEAR API excepts the block ID */
+export interface BlockIdParam {
+  block_id: string | number;
+}
+
 export enum Finality {
   FINAL = "final",
   OPTIMISTIC = "optimistic",
@@ -73,11 +78,25 @@ export function getBlockIDOrFinality<
   Parameter extends WithBlockIDOrFinality = WithBlockIDOrFinality
 >(params: Parameter): WithBlockID | WithFinality {
   if (params.blockId) {
-    return params as WithBlockID;
+    return { blockId: params.blockId };
   }
 
   if (params.finality) {
-    return params as WithFinality;
+    return { finality: params.finality };
+  }
+
+  return { finality: Finality.FINAL };
+}
+
+export function getBlockIDOrFinalityForQuery<
+  Parameter extends WithBlockIDOrFinality = WithBlockIDOrFinality
+>(params: Parameter): WithFinality | BlockIdParam {
+  if (params.blockId) {
+    return { block_id: params.blockId };
+  }
+
+  if (params.finality) {
+    return { finality: params.finality };
   }
 
   return { finality: Finality.FINAL };
