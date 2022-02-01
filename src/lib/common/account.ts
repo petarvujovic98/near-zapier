@@ -17,6 +17,18 @@ export interface WithAccountId {
   accountId: string;
 }
 
+/** An input field with an array of account ID input fields */
+export const AccountIdArrayField: Field = {
+  key: "accountIds",
+  label: "Account IDs",
+  children: [AccountIdField],
+};
+
+/** An interface that includes an array of account IDs. For use with Bundle object */
+export interface WithAccountIdArray {
+  accountIds: string[];
+}
+
 /**
  * Validate account ID from an object containing an account ID field.
  *
@@ -51,4 +63,14 @@ export function validateAccountID(
     accountId.length <= 64 &&
     ACCOUNT_ID_REGEX.test(accountId)
   );
+}
+
+/**
+ * Validate an array of account IDs.
+ *
+ * @param  {string[]} accountIds
+ * @returns boolean
+ */
+export function validateAccountIDArray(accountIds: string[]): boolean {
+  return accountIds.every(validateAccountID);
 }
