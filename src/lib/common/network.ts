@@ -1,4 +1,4 @@
-import { Field } from "../../types/fields";
+import { Field } from "../../types";
 
 export enum NetworkType {
   MAINNET = "mainnet",

@@ -9,8 +9,7 @@ import {
   WithBlockIDOrFinality,
   WithNetworkSelection,
 } from "../common";
-import { createSearch } from "../../types/search";
-import { OutputItem } from "../../types/operation";
+import { createSearch, OutputItem } from "../../types";
 
 export interface SearchBlock
   extends WithBlockIDOrFinality,

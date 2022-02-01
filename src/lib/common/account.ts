@@ -1,4 +1,4 @@
-import { Field, FieldType } from "../../types/fields";
+import { Field, FieldType } from "../../types";
 
 const ACCOUNT_ID_REGEX =
   /^(([a-z\d]+[-_])*[a-z\d]+\.)*([a-z\d]+[-_])*[a-z\d]+$/;

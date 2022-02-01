@@ -1,4 +1,4 @@
-import { Field } from "../../types/fields";
+import { Field } from "../../types";
 
 /** A block ID input field */
 export const BlockIDField: Field = {

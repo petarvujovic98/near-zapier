@@ -1,8 +1,7 @@
 import { providers } from "near-api-js";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createResource } from "../../types/resource";
-import { OutputItem } from "../../types/operation";
+import { createResource, OutputItem } from "../../types";
 import {
   getNetwork,
   WithNetworkSelection,
