@@ -17,12 +17,24 @@ export interface FunctionRequire {
   require: string;
 }
 
+/** Regular JavaScript function */
 export interface PureFunction<Input, Output> {
   (z: ZObject, bundle: Bundle<Input>):
     | Output
     | Array<Output>
     | Promise<Output>
     | Promise<Array<Output>>;
+}
+
+/** Helper interface for testing */
+export interface PureFunctionTester<
+  Input,
+  Output,
+  IsArray extends boolean = true
+> {
+  (bundle: Partial<Bundle<Input>>): Promise<
+    IsArray extends true ? Array<Output> : Output
+  >;
 }
 
 /** Internal pointer to a function from the original source or the source code itself.
