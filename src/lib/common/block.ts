@@ -88,6 +88,14 @@ export function getBlockIDOrFinality<
   return { finality: Finality.FINAL };
 }
 
+/**
+ * Get block ID or finality from object containing either a block ID or finality field.
+ * If none, return finality with value final.
+ * Note: This version is used for calling query methods.
+ *
+ * @param  {Parameter} params
+ * @returns WithFinality | WithBlockID
+ */
 export function getBlockIDOrFinalityForQuery<
   Parameter extends WithBlockIDOrFinality = WithBlockIDOrFinality
 >(params: Parameter): WithFinality | BlockIdParam {
