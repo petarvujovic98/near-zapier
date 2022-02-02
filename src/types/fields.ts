@@ -61,7 +61,7 @@ export interface BaseField {
   /** Acts differently when used in inputFields vs. when used in outputFields.
    * In inputFields: Can a user provide multiples of this field? In outputFields:
    * Does this field return an array of items of type type? */
-  list?: string;
+  list?: boolean;
   /** An array of child fields that define the structure of a sub-object for this field.
    * Usually used for line items. */
   children?: Fields;
@@ -89,7 +89,7 @@ export interface FieldWithDict extends Omit<BaseField, "list"> {
 }
 
 export interface FieldWithList extends Omit<BaseField, "dict"> {
-  list: string;
+  list: boolean;
 }
 
 export interface DynamicField extends Omit<BaseField, "dict" | "choices"> {
