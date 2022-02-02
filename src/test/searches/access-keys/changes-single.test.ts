@@ -29,12 +29,10 @@ describe("changes-single", () => {
   it("should return access key changes", async () => {
     const [result] = await perform({
       inputData: {
-        accountKeyArray: [
-          {
-            accountId: "example-acct.testnet",
-            accessKey: "ed25519:25KEc7t7MQohAJ4EDThd2vkksKkwangnuJFzcoiXj9oM",
-          },
-        ],
+        accountKeyPairs: {
+          "example-acct.testnet":
+            "ed25519:25KEc7t7MQohAJ4EDThd2vkksKkwangnuJFzcoiXj9oM",
+        },
       },
     });
 
