@@ -6,7 +6,6 @@ import {
 import { Bundle, ZObject } from "zapier-platform-core";
 
 import { OutputItem, createSearch } from "../../../types";
-
 import {
   AccessKeyField,
   AccountIdField,
@@ -17,7 +16,7 @@ import {
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
   BlockIDOrFinalityField,
-} from "./../../common";
+} from "../../common";
 
 export interface AccessKeyView {
   nonce: number;

@@ -1,8 +1,8 @@
 import { createAppTester, tools } from "zapier-platform-core";
 
-import App from "../..";
-import { Finality } from "../../lib/common";
-import { perform as blockPerform } from "../../lib/searches/block";
+import App from "../../..";
+import { Finality } from "../../../lib/common";
+import { perform as blockPerform } from "../../../lib/searches/block/details";
 
 describe("block", () => {
   let appTester: ReturnType<typeof createAppTester>;
@@ -11,7 +11,8 @@ describe("block", () => {
   beforeEach(() => {
     appTester = createAppTester(App);
     tools.env.inject();
-    perform = App.searches.block.operation.perform as typeof blockPerform;
+    perform = App.searches.blockDetails.operation
+      .perform as typeof blockPerform;
   });
 
   it("should return block details for finality input", async () => {

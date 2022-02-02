@@ -1,7 +1,7 @@
-import Block from "./block";
+import Blocks from "./block";
 import AccessKeys from "./access-keys";
 
 export default {
-  [Block.key]: Block,
+  ...Blocks,
   ...AccessKeys,
 };
