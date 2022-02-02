@@ -21,7 +21,10 @@ export interface WithAccountId {
 export const AccountIdArrayField: Field = {
   key: "accountIds",
   label: "Account IDs",
-  children: [AccountIdField],
+  helpText: "The IDs of the accounts.",
+  type: FieldType.STRING,
+  list: true,
+  placeholder: "petarvujovic.testnet",
 };
 
 /** An interface that includes an array of account IDs. For use with Bundle object */
