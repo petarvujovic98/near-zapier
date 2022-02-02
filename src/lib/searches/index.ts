@@ -1,7 +1,9 @@
-import Blocks from "./block";
 import AccessKeys from "./access-keys";
+import Blocks from "./block";
+import Chunks from "./chunk";
 
 export default {
-  ...Blocks,
   ...AccessKeys,
+  ...Blocks,
+  ...Chunks,
 };
