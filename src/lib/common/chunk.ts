@@ -59,5 +59,5 @@ export function getChunkID(inputData: WithChunkID): ChunkId {
     return inputData.chunkHash;
   }
 
-  return [inputData.blockId, inputData.shardId];
+  return [inputData.blockId, +inputData.shardId];
 }
