@@ -39,7 +39,7 @@ export interface WithBlockIDShardID extends WithBlockID, WithShardID {}
 export const ChunkIDField: Field = {
   key: "chunkId",
   label: "Chunk ID",
-  children: [BlockIDField, ShardIDField],
+  children: [BlockIDField, ShardIDField, ChunkHashField],
 };
 
 /** An interface that includes the chunk ID. For use with Bundle object */
