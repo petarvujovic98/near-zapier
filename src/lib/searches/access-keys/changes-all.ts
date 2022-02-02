@@ -56,8 +56,8 @@ export default createSearch<
     perform,
     inputFields: [
       NetworkSelectField,
-      AccountIdArrayField,
       BlockIDOrFinalityField,
+      AccountIdArrayField,
     ],
     sample: {
       id: "1",

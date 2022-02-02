@@ -11,6 +11,8 @@ import {
 } from "../../common";
 import { createSearch, OutputItem } from "../../../types";
 
+import { NetworkSelectField } from "./../../common/network";
+
 export interface BlockChangesInput
   extends WithBlockIDOrFinality,
     WithNetworkSelection {}
@@ -46,7 +48,7 @@ export default createSearch<BlockChangesInput, BlockChangesResponse>({
 
   operation: {
     perform,
-    inputFields: [BlockIDOrFinalityField],
+    inputFields: [NetworkSelectField, BlockIDOrFinalityField],
     sample: {
       id: "1",
       block_hash: "81k9ked5s34zh13EjJt26mxw5npa485SY4UNoPi6yYLo",

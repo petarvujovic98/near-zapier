@@ -11,6 +11,8 @@ import {
 } from "../../common";
 import { createSearch, OutputItem } from "../../../types";
 
+import { NetworkSelectField } from "./../../common/network";
+
 export interface BlockDetailsInput
   extends WithBlockIDOrFinality,
     WithNetworkSelection {}
@@ -46,7 +48,7 @@ export default createSearch<BlockDetailsInput, BlockDetailsResponse>({
 
   operation: {
     perform,
-    inputFields: [BlockIDOrFinalityField],
+    inputFields: [NetworkSelectField, BlockIDOrFinalityField],
     sample: {
       id: "1",
       author: "bitcat.pool.f863973.m0",

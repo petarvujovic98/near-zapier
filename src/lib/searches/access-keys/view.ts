@@ -59,9 +59,9 @@ export default createSearch<ViewAccessKeyInput, ViewAccessKeyResult>({
     perform,
     inputFields: [
       NetworkSelectField,
+      BlockIDOrFinalityField,
       AccountIdField,
       AccessKeyField,
-      BlockIDOrFinalityField,
     ],
     sample: {
       id: "1",
