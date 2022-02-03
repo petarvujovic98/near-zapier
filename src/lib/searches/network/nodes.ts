@@ -7,7 +7,6 @@ import {
   getNetwork,
   WithNetworkSelection,
   NetworkSelectField,
-  BlockIDField,
 } from "../../common";
 
 export interface NodeStatusResponse extends NodeStatusResult, OutputItem {}
@@ -42,7 +41,7 @@ export default createSearch<WithNetworkSelection, NodeStatusResponse>({
   },
 
   operation: {
-    inputFields: [NetworkSelectField, BlockIDField],
+    inputFields: [NetworkSelectField],
     perform,
     sample: {
       id: new Date().toISOString(),
