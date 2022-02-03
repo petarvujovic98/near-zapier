@@ -10,6 +10,8 @@ import {
   BlockIDField,
   WithTXHash,
   WithAccountId,
+  TXHashField,
+  AccountIdField,
 } from "../../common";
 
 export interface TXStatusInput
@@ -49,7 +51,12 @@ export default createSearch<TXStatusInput, TXStatusResult>({
   },
 
   operation: {
-    inputFields: [NetworkSelectField, BlockIDField],
+    inputFields: [
+      NetworkSelectField,
+      BlockIDField,
+      TXHashField,
+      AccountIdField,
+    ],
     perform,
     sample: {
       id: new Date().toISOString(),
