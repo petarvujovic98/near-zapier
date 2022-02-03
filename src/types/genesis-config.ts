@@ -227,7 +227,7 @@ export interface Validator {
   amount: string;
 }
 
-export interface NearProtocolConfig {
+export interface GenesisProtocolConfig {
   protocol_version: number;
   genesis_time: string;
   chain_id: string;

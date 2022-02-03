@@ -2,14 +2,16 @@ import { providers } from "near-api-js";
 import { Bundle, ZObject } from "zapier-platform-core";
 
 import { createSearch, OutputItem } from "../../../types";
-import { NearProtocolConfig } from "../../../types/near-heplers";
+import { GenesisProtocolConfig } from "../../../types/genesis-config";
 import {
   getNetwork,
   WithNetworkSelection,
   NetworkSelectField,
 } from "../../common";
 
-export interface GenesisConfigResult extends NearProtocolConfig, OutputItem {}
+export interface GenesisConfigResult
+  extends GenesisProtocolConfig,
+    OutputItem {}
 
 export async function perform(
   z: ZObject,
@@ -25,7 +27,7 @@ export async function perform(
 
   const result = (await rpc.experimental_protocolConfig({
     sync_checkpoint: "genesis",
-  })) as NearProtocolConfig;
+  })) as GenesisProtocolConfig;
 
   z.console.log(`Got genesis config successfully`);
 

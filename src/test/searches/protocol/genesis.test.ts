@@ -8,7 +8,7 @@ import {
 } from "../../../lib/searches/protocol/genesis";
 import { PureFunctionTester } from "../../../types";
 
-describe("price", () => {
+describe("genesis", () => {
   let appTester: ReturnType<typeof createAppTester>;
   let perform: PureFunctionTester<WithNetworkSelection, GenesisConfigResult>;
 
@@ -22,7 +22,7 @@ describe("price", () => {
       );
   });
 
-  it("should return gas price for finality input", async () => {
+  it("should return genesis config", async () => {
     const [result] = await perform({
       inputData: {},
     });
