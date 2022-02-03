@@ -33,8 +33,7 @@ describe("details", () => {
 
   it("should return block details for block ID input", async () => {
     const [result] = await perform({
-    const [result] = await appTester(perform, {
-      inputData: { blockId: 80946664 },
+      inputData: { blockId: 80996664 },
     });
 
     expect(result).toBeDefined();

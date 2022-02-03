@@ -38,7 +38,7 @@ describe("block", () => {
 
   it("should return chunk details for block ID and shard ID input", async () => {
     const [result] = await perform({
-      inputData: { blockId: 80946664, shardId: 1 },
+      inputData: { blockId: 80996664, shardId: 1 },
     });
 
     expect(result).toBeDefined();
