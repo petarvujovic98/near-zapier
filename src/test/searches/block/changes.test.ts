@@ -8,7 +8,7 @@ import {
 } from "../../../lib/searches/block/changes";
 import { PureFunctionTester } from "../../../types";
 
-describe("changes-single", () => {
+describe("changes", () => {
   let appTester: ReturnType<typeof createAppTester>;
   let perform: PureFunctionTester<BlockChangesInput, BlockChangesResponse>;
 
