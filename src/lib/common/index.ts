@@ -4,3 +4,4 @@ export * from "./account";
 export * from "./block";
 export * from "./chunk";
 export * from "./network";
+export * from "./transaction";

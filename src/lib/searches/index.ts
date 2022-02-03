@@ -4,6 +4,7 @@ import Chunks from "./chunk";
 import Gas from "./gas";
 import Network from "./network";
 import Protocol from "./protocol";
+import Transaction from "./transaction";
 
 export default {
   ...AccessKeys,
@@ -12,4 +13,5 @@ export default {
   ...Gas,
   ...Network,
   ...Protocol,
+  ...Transaction,
 };
