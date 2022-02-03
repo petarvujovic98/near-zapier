@@ -1,7 +1,6 @@
 import { createAppTester, tools } from "zapier-platform-core";
 
 import App from "../../..";
-import { Finality } from "../../../lib/common";
 import {
   GasPriceInput,
   GasPriceResult,
@@ -23,9 +22,9 @@ describe("price", () => {
       );
   });
 
-  it("should return gas price for finality input", async () => {
+  it("should return gas price for empty block ID", async () => {
     const [result] = await perform({
-      inputData: { finality: Finality.FINAL },
+      inputData: {},
     });
 
     expect(result).toBeDefined();

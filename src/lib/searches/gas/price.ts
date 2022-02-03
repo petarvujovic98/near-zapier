@@ -7,12 +7,12 @@ import {
   WithNetworkSelection,
   NetworkSelectField,
   BlockIDField,
-  WithBlockIDOrFinality,
+  WithBlockID,
 } from "../../common";
 
 export interface GasPriceInput
   extends WithNetworkSelection,
-    WithBlockIDOrFinality {}
+    Partial<WithBlockID> {}
 
 export interface GasPriceResult extends OutputItem {
   gasPrice: string;
