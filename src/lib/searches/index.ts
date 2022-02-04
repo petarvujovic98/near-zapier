@@ -1,4 +1,5 @@
 import AccessKeys from "./access-keys";
+import Account from "./account";
 import Blocks from "./block";
 import Chunks from "./chunk";
 import Gas from "./gas";
@@ -8,6 +9,7 @@ import Transaction from "./transaction";
 
 export default {
   ...AccessKeys,
+  ...Account,
   ...Blocks,
   ...Chunks,
   ...Gas,
