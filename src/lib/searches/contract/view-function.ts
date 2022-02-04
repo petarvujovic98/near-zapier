@@ -19,8 +19,7 @@ import {
   ArgumentsField,
   encodeToBase64,
 } from "../../common";
-
-import MethodName from "./method-name";
+import MethodName from "../../triggers/contract/method-name";
 
 export interface ViewFunctionInput
   extends WithNetworkSelection,
@@ -44,11 +43,16 @@ export const perform = async (
     `Calling contract function with input data: ${JSON.stringify(inputData)}`
   );
 
+  const args_base64 =
+    inputData.arguments && Object.keys(inputData.arguments).length > 0
+      ? encodeToBase64(inputData.arguments)
+      : "";
+
   const code = await rpc.query<CodeResult>({
     request_type: "call_function",
     account_id: inputData.accountId,
     method_name: inputData.methodName,
-    args_base64: encodeToBase64(JSON.stringify(inputData.arguments)),
+    args_base64,
     ...getBlockIDOrFinalityForQuery(inputData),
   });
 
