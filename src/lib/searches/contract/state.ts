@@ -35,7 +35,7 @@ export const perform = async (
     `Getting contract state with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accountView = await rpc.query<ViewStateResult>({
+  const state = await rpc.query<ViewStateResult>({
     request_type: "view_code",
     account_id: inputData.accountId,
     prefix_base64: inputData.prefix ? encodeToBase64(inputData) : "",
@@ -44,7 +44,7 @@ export const perform = async (
 
   z.console.log("Got contract state successfully");
 
-  return [{ id: new Date().toISOString(), ...accountView }];
+  return [{ id: new Date().toISOString(), ...state }];
 };
 
 export default createSearch<ViewContractStateInput, ViewContractStateResult>({

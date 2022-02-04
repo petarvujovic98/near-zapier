@@ -35,14 +35,14 @@ export const perform = async (
     )}`
   );
 
-  const accountView = await rpc.contractCodeChanges(
+  const codeChanges = await rpc.contractCodeChanges(
     inputData.accountIds,
     getBlockIDOrFinality(inputData)
   );
 
   z.console.log("Got contract code changes successfully");
 
-  return [{ id: new Date().toISOString(), ...accountView }];
+  return [{ id: new Date().toISOString(), ...codeChanges }];
 };
 
 export default createSearch<
