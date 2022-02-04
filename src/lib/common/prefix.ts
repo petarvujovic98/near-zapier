@@ -7,7 +7,6 @@ export const PrefixField: Field = {
   type: FieldType.STRING,
   helpText: "The key prefix of the contract state.",
   placeholder: "state_",
-  default: "",
 };
 
 /** An interface that includes the key prefix. For use with Bundle object */
