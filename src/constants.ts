@@ -1,3 +1,16 @@
+import { providers } from "near-api-js";
 import { BlockId } from "near-api-js/lib/providers/provider";
 
-export const TEST_BLOCK_ID: BlockId = 81196664;
+import { getNetwork, NetworkType } from "./lib/common";
+
+export async function getTestBlockId(
+  network: NetworkType = NetworkType.TESTNET
+): Promise<BlockId> {
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(network) });
+
+  const {
+    header: { height },
+  } = await rpc.block({ finality: "final" });
+
+  return height;
+}

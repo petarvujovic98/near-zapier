@@ -1,6 +1,6 @@
 import { createAppTester, tools } from "zapier-platform-core";
 
-import { TEST_BLOCK_ID } from "../../../constants";
+import { getTestBlockId } from "../../../constants";
 import App from "../../..";
 import {
   ChunkDetailsInput,
@@ -39,7 +39,7 @@ describe("block", () => {
 
   it("should return chunk details for block ID and shard ID input", async () => {
     const [result] = await perform({
-      inputData: { blockId: TEST_BLOCK_ID, shardId: 1 },
+      inputData: { blockId: await getTestBlockId(), shardId: 1 },
     });
 
     expect(result).toBeDefined();

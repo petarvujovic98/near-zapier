@@ -1,7 +1,7 @@
 import { createAppTester, tools } from "zapier-platform-core";
 
 import App from "../../..";
-import { TEST_BLOCK_ID } from "../../../constants";
+import { getTestBlockId } from "../../../constants";
 import { Finality } from "../../../lib/common";
 import {
   BlockDetailsInput,
@@ -34,7 +34,7 @@ describe("details", () => {
 
   it("should return block details for block ID input", async () => {
     const [result] = await perform({
-      inputData: { blockId: TEST_BLOCK_ID },
+      inputData: { blockId: await getTestBlockId() },
     });
 
     expect(result).toBeDefined();
