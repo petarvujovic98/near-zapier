@@ -4,6 +4,7 @@ import CodeChanges from "./code-changes";
 import StateChanges from "./state-changes";
 import MethodName from "./method-name";
 import ViewFunction from "./view-function";
+import ChangeFunction from "./change-function";
 
 export default {
   [Code.key]: Code,
@@ -12,4 +13,5 @@ export default {
   [StateChanges.key]: StateChanges,
   [MethodName.key]: MethodName,
   [ViewFunction.key]: ViewFunction,
+  [ChangeFunction.key]: ChangeFunction,
 };
