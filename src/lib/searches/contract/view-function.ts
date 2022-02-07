@@ -45,7 +45,7 @@ export const perform = async (
 
   const args_base64 =
     inputData.arguments && Object.keys(inputData.arguments).length > 0
-      ? encodeToBase64(inputData.arguments)
+      ? encodeToBase64(JSON.stringify(inputData.arguments))
       : "";
 
   const code = await rpc.query<CodeResult>({
