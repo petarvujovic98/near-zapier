@@ -23,7 +23,7 @@ describe("change function", () => {
       );
   });
 
-  it("should return return transaction outcome", async () => {
+  it("should return transaction outcome", async () => {
     const keyStore = new UnencryptedFileSystemKeyStore(
       "/home/petar/.near-credentials"
     );
