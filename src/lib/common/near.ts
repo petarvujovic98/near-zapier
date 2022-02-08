@@ -2,7 +2,6 @@ import BN = require("bn.js");
 import { connect, Near } from "near-api-js";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
 import { KeyPairEd25519 } from "near-api-js/lib/utils";
-import { parseNearAmount } from "near-api-js/lib/utils/format";
 
 import { getNetwork, WithNetworkSelection } from "./network";
 
@@ -44,11 +43,11 @@ export async function setUpNEARWithPrivateKey(
 }
 
 /**
- * A helper function that wraps the parseNearAmount function with a new BN instance.
+ * A helper function that transforms a NEAR amount into yoctoNEAR.
  *
  * @param  {number|string} amount
  * @returns BN
  */
 export function getYoctoNEAR(amount: number | string): BN {
-  return new BN(parseNearAmount(`${amount}`));
+  return new BN(amount).mul(new BN(10).pow(new BN(24)));
 }
