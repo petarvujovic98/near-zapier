@@ -65,3 +65,57 @@ Like [Polkadot](https://polkadot.network/), [Solana](https://solana.com/) and [A
 3. Hard to scale - current blockchains don't scale well to high traffic
 
 If you want to learn more about NEAR, head over to their [website](https://near.org/), or directly to their [university](https://www.near.university/) to learn about the technology and how to use it.
+
+## Zapier custom apps
+
+Zapier offers a vast amount of API integrations that you can use for your automation needs,
+but there might be something that you need that is not available.
+
+The solution is to create a custom integration for your API which will be suitable for your
+workflow.
+
+These custom integrations can be built in one of two ways:
+
+- Using the [Zapier SDK](https://www.npmjs.com/package/zapier-platform-core) and writing custom [Node.js](https://nodejs.dev) code
+- Using their UI builder on the developer platform
+
+Since what I am doing requires a bit more configuration and customization than the UI builder provides,
+I am building the NEAR integration with the SDK.
+
+Any way you choose, a good thing to know is that any logic you implement will be executed
+on AWS Lambda functions, which you can find out about [here](https://aws.amazon.com/lambda).
+AWS Lambda functions are serverless functions meaning they are not tied to a specific server
+and are very short lived, you can think of them as regular functions being performed on some
+computer (virtual machine to be more specific) somewhere in the cloud. The downside to this
+is you cannot store permanent data on those functions since each time they are called they
+will be fully discarded from memory, and they do not have access to the machines they are
+being run on (besides loading all the library files they are using).
+
+### Tooling and environment set up
+
+#### CLI
+
+The [Zapier CLI](https://www.npmjs.com/package/zapier-platform-cli) is the tool you will
+need to have installed globally in order to bootstrap, build, package and deploy your integration.
+You can install it with the following command:
+
+```shell
+npm install -g zapier-platform-cli
+```
+
+After installation you will have to login to your Zapier account using the following command:
+
+```shell
+zapier login
+```
+
+If you do not have an account yet, the command will guide you through the process of creating one.
+If you want to find out a bit more about their accounts you can do so [here](https://zapier.com).
+
+To start your project you can use the `zapier init` command to scaffold the minimum boilerplate
+needed to get you started.
+
+**PRO TIP**: You can pass the `--template` flag with the name of the template to start off with
+something more than just the basic configuration. I chose the Typescript template.
+
+#### Typescript
