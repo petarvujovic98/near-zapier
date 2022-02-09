@@ -3,7 +3,12 @@ import { ContractCodeView } from "near-api-js/lib/providers/provider";
 import { getMethodNames } from "near-contract-parser";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
@@ -13,6 +18,7 @@ import {
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
   BlockIDOrFinalityField,
+  validateAccountID,
 } from "../../common";
 
 export interface ViewMethodsInput
@@ -29,6 +35,14 @@ export const perform = async (
   { inputData }: Bundle<ViewMethodsInput>
 ): Promise<Array<ViewMethodsResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
 
   z.console.log(
     `Getting contract method names with input data: ${JSON.stringify(

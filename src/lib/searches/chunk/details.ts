@@ -9,7 +9,12 @@ import {
   WithChunkID,
   WithNetworkSelection,
 } from "../../common";
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 
 import { NetworkSelectField } from "./../../common/network";
 
@@ -21,6 +26,14 @@ export async function perform(
   z: ZObject,
   { inputData }: Bundle<ChunkDetailsInput>
 ): Promise<Array<ChunkDetailsResponse>> {
+  if (!inputData.chunkHash && !inputData.blockId && !inputData.shardId) {
+    throw new z.errors.Error(
+      "Invalid chunk ID. Either provide a chunk hash or a block ID and a shard ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
   z.console.log(
     `Getting chunk details with input data: ${JSON.stringify(inputData)}`
   );

@@ -3,6 +3,7 @@ export * from "./authentication";
 export * from "./bulk-read";
 export * from "./create";
 export * from "./display";
+export * from "./errors";
 export * from "./fields";
 export * from "./function";
 export * from "./middleware";

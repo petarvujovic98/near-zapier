@@ -2,7 +2,12 @@ import { providers } from "near-api-js";
 import { AccessKeyView } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   AccessKeyField,
   WithAccessKey,
@@ -14,6 +19,7 @@ import {
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
   BlockIDOrFinalityField,
+  validateAccountID,
 } from "../../common";
 
 export interface ViewAccessKeyInput
@@ -29,6 +35,14 @@ export const perform = async (
   { inputData }: Bundle<ViewAccessKeyInput>
 ): Promise<Array<ViewAccessKeyResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
 
   z.console.log(
     `Getting access key with input data: ${JSON.stringify(inputData)}`

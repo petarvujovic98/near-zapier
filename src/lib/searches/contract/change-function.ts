@@ -3,7 +3,12 @@ import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
 import { Primitive } from "type-fest";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
@@ -22,6 +27,7 @@ import {
   WithGas,
   setUpNEARWithPrivateKey,
   getYoctoNEAR,
+  validateAccountID,
 } from "../../common";
 import MethodName from "../../triggers/contract/method-name";
 
@@ -53,6 +59,38 @@ export const perform = async (
   z: ZObject,
   { inputData }: Bundle<ChangeFunctionInput>
 ): Promise<Array<ChangeFunctionResult>> => {
+  if (!validateAccountID(inputData.senderAccountId)) {
+    throw new z.errors.Error(
+      "Invalid sender account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid contract ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
+  if (inputData.gas && inputData.gas <= 0) {
+    throw new z.errors.Error(
+      "Invalid gas. Gas has to be greater than 0",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
+  if (inputData.deposit && inputData.deposit < 0) {
+    throw new z.errors.Error(
+      "Invalid deposit. Deposit has to be non negative",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
   const { near, keyStore } = await setUpNEARWithPrivateKey(inputData);
 
   const account = await near.account(inputData.senderAccountId);

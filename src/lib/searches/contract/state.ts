@@ -2,7 +2,12 @@ import { providers } from "near-api-js";
 import { ViewStateResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
@@ -15,6 +20,7 @@ import {
   WithPrefix,
   PrefixField,
   encodeToBase64,
+  validateAccountID,
 } from "../../common";
 
 export interface ViewContractStateInput
@@ -30,6 +36,14 @@ export const perform = async (
   { inputData }: Bundle<ViewContractStateInput>
 ): Promise<Array<ViewContractStateResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
 
   z.console.log(
     `Getting contract state with input data: ${JSON.stringify(inputData)}`

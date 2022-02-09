@@ -542,6 +542,14 @@ export const perform = async (
 ): Promise<Array<ViewAccountResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
 
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
   z.console.log(
     `Getting account with input data: ${JSON.stringify(inputData)}`
   );
@@ -636,7 +644,12 @@ import { providers } from "near-api-js";
 import { AccountView } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypes,
+  ErrorTypeCodes,
+} from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
@@ -646,6 +659,7 @@ import {
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
   BlockIDOrFinalityField,
+  validateAccountID,
 } from "../../common";
 
 export interface ViewAccountInput
@@ -660,6 +674,14 @@ export const perform = async (
   { inputData }: Bundle<ViewAccountInput>
 ): Promise<Array<ViewAccountResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
 
   z.console.log(
     `Getting account with input data: ${JSON.stringify(inputData)}`

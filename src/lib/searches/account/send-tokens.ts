@@ -1,7 +1,12 @@
 import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
@@ -12,6 +17,7 @@ import {
   getYoctoNEAR,
   WithAmount,
   AmountField,
+  validateAccountID,
 } from "../../common";
 
 export interface SendTokensInput
@@ -33,6 +39,30 @@ export const perform = async (
   const account = await near.account(inputData.senderAccountId);
 
   const { privateKey: _, amount: __, ...logData } = inputData;
+
+  if (!validateAccountID(inputData.senderAccountId)) {
+    throw new z.errors.Error(
+      "Invalid sender account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
+  if (inputData.amount <= 0) {
+    throw new z.errors.Error(
+      "Invalid amount. Amount has to be greater than 0",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
 
   z.console.log(
     `Calling send tokens function with input data: ${JSON.stringify(logData)}`

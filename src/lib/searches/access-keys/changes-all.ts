@@ -2,7 +2,12 @@ import { providers } from "near-api-js";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   NetworkSelectField,
   WithNetworkSelection,
@@ -12,6 +17,7 @@ import {
   BlockIDOrFinalityField,
   WithAccountIdArray,
   AccountIdArrayField,
+  validateAccountID,
 } from "../../common";
 
 export interface ViewAccessKeysChangesInput
@@ -26,6 +32,16 @@ export const perform = async (
   { inputData }: Bundle<ViewAccessKeysChangesInput>
 ): Promise<Array<ViewAccessKeysChangesResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  inputData.accountIds.forEach((accountId) => {
+    if (!validateAccountID(accountId)) {
+      throw new z.errors.Error(
+        `Invalid account ID for account: ${accountId}`,
+        ErrorTypes.INVALID_DATA,
+        ErrorTypeCodes.INVALID_DATA
+      );
+    }
+  });
 
   z.console.log(
     `Getting access keys' changes with input data: ${JSON.stringify(inputData)}`

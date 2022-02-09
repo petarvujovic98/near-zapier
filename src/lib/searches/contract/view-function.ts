@@ -2,7 +2,12 @@ import { providers } from "near-api-js";
 import { CodeResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { OutputItem, createSearch } from "../../../types";
+import {
+  OutputItem,
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
@@ -18,6 +23,7 @@ import {
   MethodNameField,
   ArgumentsField,
   encodeToBase64,
+  validateAccountID,
 } from "../../common";
 import MethodName from "../../triggers/contract/method-name";
 
@@ -38,6 +44,14 @@ export const perform = async (
   { inputData }: Bundle<ViewFunctionInput>
 ): Promise<Array<ViewFunctionResult>> => {
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  if (!validateAccountID(inputData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid contract ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
 
   z.console.log(
     `Calling contract function with input data: ${JSON.stringify(inputData)}`
