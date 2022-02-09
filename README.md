@@ -4,13 +4,43 @@ In this article I will walk you through my experience building a NEAR integratio
 You will see where and how I did my research, including tips on where to find the solutions
 for different kinds of problems.
 
+If you want to check out my code while reading, you can find the source code on
+[GitHub](https://github.com/petarvujovic98/near-zapier).
+
+You can also check out my YouTube playlist of the daily progress videos for this process
+[here](https://youtube.com/playlist?list=PL3ZFE2cBGD2MylJ-87DQPQJUjRSNiud5r).
+
 ## Overview
 
 Here is a rough outline of the items that will be covered in this article (you can go ahead
 and skip any of the parts that seem irrelevant to you):
 
 **Note**: If you are one of the people who just want the short list of takeaways, just skip
-to the conclusion at the end. **P.S.** Pro tip, also check out the tips and tricks section.
+to the conclusion at the end. **P.S.** Pro tip, also check out the tooling section.
+
+- [Building a NEAR integration on Zapier](#building-a-near-integration-on-zapier)
+  - [Overview](#overview)
+  - [Zapier](#zapier)
+    - [Trigger](#trigger)
+    - [Search](#search)
+    - [Create](#create)
+  - [NEAR](#near)
+  - [Zapier custom apps](#zapier-custom-apps)
+    - [Tooling and environment set up](#tooling-and-environment-set-up)
+      - [Node version](#node-version)
+      - [CLI](#cli)
+      - [Typescript](#typescript)
+      - [ESLint and Prettier](#eslint-and-prettier)
+      - [Other dependencies](#other-dependencies)
+    - [Development](#development)
+      - [NEAR docs](#near-docs)
+      - [Input fields](#input-fields)
+      - [Resource type definitions](#resource-type-definitions)
+      - [Action logic](#action-logic)
+      - [Testing](#testing)
+      - [Documentation and samples](#documentation-and-samples)
+      - [Bringing it all together](#bringing-it-all-together)
+  - [Wrap up](#wrap-up)
 
 ## Zapier
 
@@ -595,3 +625,115 @@ export default createSearch<ViewAccountInput, ViewAccountResult>({
   },
 });
 ```
+
+#### Bringing it all together
+
+So all of these components represent what you need to create an action, and this is how it
+looks:
+
+```typescript
+import { providers } from "near-api-js";
+import { AccountView } from "near-api-js/lib/providers/provider";
+import { Bundle, ZObject } from "zapier-platform-core";
+
+import { OutputItem, createSearch } from "../../../types";
+import {
+  AccountIdField,
+  WithAccountId,
+  NetworkSelectField,
+  WithNetworkSelection,
+  getNetwork,
+  WithBlockIDOrFinality,
+  getBlockIDOrFinalityForQuery,
+  BlockIDOrFinalityField,
+} from "../../common";
+
+export interface ViewAccountInput
+  extends WithNetworkSelection,
+    WithAccountId,
+    WithBlockIDOrFinality {}
+
+export interface ViewAccountResult extends AccountView, OutputItem {}
+
+export const perform = async (
+  z: ZObject,
+  { inputData }: Bundle<ViewAccountInput>
+): Promise<Array<ViewAccountResult>> => {
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  z.console.log(
+    `Getting account with input data: ${JSON.stringify(inputData)}`
+  );
+
+  const accountView = await rpc.query<AccountView>({
+    request_type: "view_account",
+    account_id: inputData.accountId,
+    ...getBlockIDOrFinalityForQuery(inputData),
+  });
+
+  z.console.log("Got account successfully");
+
+  return [{ id: new Date().toISOString(), ...accountView }];
+};
+
+export default createSearch<ViewAccountInput, ViewAccountResult>({
+  key: "viewAccount",
+  noun: "View Account",
+  display: {
+    label: "View Account",
+    description: "Returns basic account information.",
+  },
+  operation: {
+    perform,
+    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    sample: {
+      id: "1",
+      amount: "399992611103597728750000000",
+      locked: "0",
+      code_hash: "11111111111111111111111111111111",
+      storage_usage: 642,
+      storage_paid_at: 0,
+      block_height: 17795474,
+      block_hash: "9MjpcnwW3TSdzGweNfPbkx8M74q1XzUcT1PAN8G5bNDz",
+    },
+  },
+});
+```
+
+## Wrap up
+
+Overall the process of developing an integration for Zapier was quite enjoyable, a bit of
+repetetive work here and there, but not too bad. Their approach to createing integrations
+is quite adaptable since they allow you to use pretty much anything that can run on the
+serverless environment (AWS Lambda to be exact).
+
+Their documentation is not as eye opening as I would have liked. And when I say eye opening
+I mean that there were still some nuances left for me to dig into, whether through their
+codebase or by trying things out, instead of them just straight up explaining what certain
+things do. For example I didn't realise that `Triggers` are the only actions that can be
+used to start a Zap, yes their name implies that they _trigger_ a Zap but nowhere does it
+say that it's not allowed for `Searches` to do that too. That might just be me being used
+to how other platforms work (_cough, cough_ Integromat _cough, cough_).
+
+Another thing is that I wish they provided the functionality that I created manually out of
+the box, meaning providing you with type definitions for fields, functions and actions. I
+found the help of those type definitions quite useful, even though they do not convey the
+whole schema validity or restrictions, they do enough to speed up the process.
+
+The NEAR side of things was mostly good in terms of the RPC API, but the client documentation
+was not as comprehensive as I thought it should be. The [quick reference](https://docs.near.org/docs/api/naj-quick-reference)
+and [cookbook](https://docs.near.org/docs/api/naj-cookbook) provided offer some good
+information and example use cases, but for anything outside of that you are left to
+yourself. The [typedocs](https://near.github.io/near-api-js) give you explanations of the
+library structure and they tell you the _what_ and the _how_ of the functionalities, but
+they don't show you usage examples and they don't make all of the functionality easily
+discoverable. So some of the use cases I had required me to jump between the typedocs, the
+RPC docs and the source code of the library, which I didn't find difficult but do think is
+not the ideal user experience especially for people just getting started with NEAR. Ideally
+everything should be documented in one place for ease of readability, understanding and
+discoverability.
+
+All in all I can say that the integration process was definitely not boring, I had fun
+developing and learning the platform and I believe anyone with prior experience with either
+platform could easily do the same in no time. I hope that Zapier integrates some of the
+features that I talked about eariler, and I'm sure that the NEAR docs will only get better.
