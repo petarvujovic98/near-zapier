@@ -327,3 +327,271 @@ be using, namely:
 - [near-contract-parser](https://www.npmjs.com/package/near-contract-parser) a library for parsing and discovering interfaces from NEAR smart contracts
 - [bn.js](https://www.npmjs.com/package/bn.js) a library for working with big numbers (and the types from [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) - [@types/bn.js](https://www.npmjs.com/package/@types/bn.js))
 - [type-fest](https://www.npmjs.com/package/type-fest) which is just a collection of utility types which I find useful
+
+### Development
+
+The process of developing was comprised of the following main steps:
+
+- Check the [NEAR RPC API](https://docs.near.org/docs/api/rpc) for the endpoint you want to integrate
+- Create the input fields for the parameters of that endpoint
+- Create type definitions for the resources that are goint to be used if they don't already exist
+- Develop the logic to perform the action and return the result
+- Write the tests for the integrated logic
+- Add documentation and samples for the endpoint
+
+#### NEAR docs
+
+This step is quite self explanatory, and the docs are quite good, so you can just read through
+anything you want over there. But as a short summary, the RPC endpoints are divided in several
+categories based on the logic that they perform.
+
+For example checking the state of accounts or contracts is in the Accounts/Contracts category.
+
+#### Input fields
+
+Input fields represent the definitions of inputs that are going to be displayed to the user
+whent setting up a particular integration. They follow a certain schema, so the CLI will
+check for compliance before publishing the integration, this however is in my opinion a
+rather slow feedback loop, so what I decided to do is to go through their schema definitions
+and create Typescript type definitions that mirror the schema structure.
+
+This way I can get autocomplete and error messages if I use the wrong combination of values
+for the field definition, or if I am simply missing some mandatory info.
+
+An input field definition with the type definitions looks something like this:
+
+```typescript
+/** An account ID input field */
+export const AccountIdField: Field = {
+  key: "accountId",
+  label: "Account ID",
+  helpText: "The ID of the account.",
+  type: FieldType.STRING,
+  placeholder: "petarvujovic.testnet",
+};
+```
+
+where `FieldType` is an enum that I defined based on their allowed types:
+
+```typescript
+export enum FieldType {
+  STRING = "string",
+  TEXT = "text",
+  INTEGER = "integer",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  DATETIME = "datetime",
+  FILE = "file",
+  PASSWORD = "password",
+  COPY = "copy",
+  CODE = "code",
+}
+```
+
+#### Resource type definitions
+
+Since I want to correctly use the input fields, I want to supply the generic `Bundle` object
+with some type information in order to make me use the correct parameter names when working
+with the input data.
+
+For example for the `AccountIdField` I created an interface that looks like this:
+
+```typescript
+/** An interface that includes the account ID. For use with Bundle object */
+export interface WithAccountId {
+  accountId: string;
+}
+```
+
+Then I can compose interfaces that extend several of these helper interfaces to create useful
+objects like the following:
+
+```typescript
+export interface ViewAccountInput
+  extends WithNetworkSelection,
+    WithAccountId,
+    WithBlockIDOrFinality {}
+```
+
+**Note**: The `WithNetworkSelection` and `WithBlockIDOrFinality` interfaces are the two most
+most common ones. If you want to see their source code you can check out my repository
+on [GitHub](https://github.com/petarvujovic98/near-zapier).
+
+Apart from these types related to the users' input, I also created the types for the output
+of these actions, this way not only do I force myself to return what is expected, but I
+also force myself to provide correctly typed result samples.
+This looks something like the following:
+
+```typescript
+export interface ViewAccountResult extends AccountView, OutputItem {}
+```
+
+Where the `AccountView` interfaces is imported from the `near-api-js` library and the `OutputItem`
+is just an interface with an `id` field because Zapier expects it in the output.
+
+Since all of this is a bit separated (samples, input fields, input types, output types) I
+created some helper functions for creating these Zapier actions. They are just identity functions,
+but since they are typed, they force the developer (me) to provide the correct input:
+
+```typescript
+/**
+ * Helper function to create a search operation.
+ *
+ * @param  {Search} definition The search definition.
+ * @returns Search
+ */
+export function createSearch<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+>(definition: Search<Input, Output>): Search<Input, Output> {
+  return definition;
+}
+```
+
+You might be wondering what the `Search` type is and why it is generic... Short answer,
+it is a type definition based on the `Search` schema on Zapier and since the input and output
+is arbitrary meaning it changes from action to action, I made it generic to generate a
+different type for each action.
+
+Now this is what the `Search` type looks like:
+
+```typescript
+** How will Zapier search for existing objects? */
+export interface SearchHidden<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+> {
+  /** A key to uniquely identify this search. */
+  key: string;
+  /** A noun for this search that completes the sentence "finds a specific XXX". */
+  noun: string;
+  /** Configures the UI for this search. */
+  display: BasicDisplayHidden;
+  /** Powers the functionality for this search. */
+  operation: BasicActionOperation<Input, Output>;
+}
+
+/** How will Zapier search for existing objects? */
+export interface SearchVisible<
+  Input = unknown,
+  Output extends OutputItem = OutputItem
+> {
+  /** A key to uniquely identify this search. */
+  key: string;
+  /** A noun for this search that completes the sentence "finds a specific XXX". */
+  noun: string;
+  /** Configures the UI for this search. */
+  display: BasicDisplayVisible;
+  /** Powers the functionality for this search. */
+  operation: BasicActionOperation<Input, Output>;
+}
+
+/** How will Zapier get notified of new objects? */
+export type Search<Input = unknown, Output extends OutputItem = OutputItem> =
+  | SearchHidden<Input, Output>
+  | SearchVisible<Input, Output>;
+```
+
+#### Action logic
+
+This is the most important part of this process, namely writing the logic of the action.
+
+Here you use the input that is provided to the action by the user (or another action) and
+perform a call, or series of calls, to the API - in my case NEAR RPC API.
+
+Most of the endpoints were just basic RPC calls using the `near-api-js` `JsonRpcProvider`,
+and some of them were a bit more complex, like parsing the contract interfaces and sending
+signed transactions using the `near-api-js` client.
+
+Here is what the logic of the `ViewAccount` action looks like:
+
+```typescript
+export const perform = async (
+  z: ZObject,
+  { inputData }: Bundle<ViewAccountInput>
+): Promise<Array<ViewAccountResult>> => {
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+
+  z.console.log(
+    `Getting account with input data: ${JSON.stringify(inputData)}`
+  );
+
+  const accountView = await rpc.query<AccountView>({
+    request_type: "view_account",
+    account_id: inputData.accountId,
+    ...getBlockIDOrFinalityForQuery(inputData),
+  });
+
+  z.console.log("Got account successfully");
+
+  return [{ id: new Date().toISOString(), ...accountView }];
+};
+```
+
+Here we have some straight forward code, format the input data into what we need, log before
+and after performing the action, perform the RPC call and return the result.
+You might find the `id: new Date().toISOString()` part a bit wierd, I do too, but it is there
+because Zapier needs your API to return an ID for each result, which in our case is meaningless.
+
+#### Testing
+
+You can see that there is a lot of involvement from the Zapier library, from the `ZObject`,
+input `Bundle` and the execution context itself, in order to test the action properly we
+need to set up an adequate environment.
+
+The Zapier SDK provides us with a helper function that sets up the context and bootstraps
+our App to make sending requests easier. After that we just need to pass the function reference
+to the environment, along with the input (not the `ZObject` as this is provided by the SDK setup)
+and voila we performed a call just like we would if we were running a Zap.
+
+Here is what this setup comes down to:
+
+```typescript
+let appTester: ReturnType<typeof createAppTester>;
+let perform: PureFunctionTester<ViewAccountInput, ViewAccountResult>;
+
+beforeEach(() => {
+  appTester = createAppTester(App);
+  tools.env.inject();
+  perform = (input) =>
+    appTester(
+      App.searches[View.key].operation.perform as typeof viewPerform,
+      input
+    );
+});
+```
+
+The `PureFunctionTester` type is a helper definition I created for typeing the `perform` operation
+in tests, since the `perform` in the actual action is a bit different, it expects the `ZObject` as the
+first parameter.
+
+#### Documentation and samples
+
+As I mentioned before, I created a few helper functions to properly check sample validity,
+and not to forget any key descriptions or labels, so this is what it looks like when writing
+them into the action:
+
+```typescript
+export default createSearch<ViewAccountInput, ViewAccountResult>({
+  key: "viewAccount",
+  noun: "View Account",
+  display: {
+    label: "View Account",
+    description: "Returns basic account information.",
+  },
+  operation: {
+    perform,
+    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    sample: {
+      id: "1",
+      amount: "399992611103597728750000000",
+      locked: "0",
+      code_hash: "11111111111111111111111111111111",
+      storage_usage: 642,
+      storage_paid_at: 0,
+      block_height: 17795474,
+      block_hash: "9MjpcnwW3TSdzGweNfPbkx8M74q1XzUcT1PAN8G5bNDz",
+    },
+  },
+});
+```
