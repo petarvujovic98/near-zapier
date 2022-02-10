@@ -1,4 +1,5 @@
 import * as BN from "bn.js";
+import { TypedError } from "near-api-js/lib/providers";
 import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
 import { Primitive } from "type-fest";
 import { Bundle, ZObject } from "zapier-platform-core";
@@ -103,24 +104,44 @@ export const perform = async (
     )}`
   );
 
-  const result = await account.functionCall({
-    methodName: inputData.methodName,
-    args: inputData.arguments,
-    attachedDeposit: getYoctoNEAR(inputData.deposit),
-    contractId: inputData.accountId,
-    ...(inputData.gas ? { gas: getYoctoNEAR(inputData.gas) } : {}),
-  });
+  try {
+    const result = await account.functionCall({
+      methodName: inputData.methodName,
+      args: inputData.arguments,
+      attachedDeposit: getYoctoNEAR(inputData.deposit),
+      contractId: inputData.accountId,
+      ...(inputData.gas ? { gas: getYoctoNEAR(inputData.gas) } : {}),
+    });
 
-  z.console.log("Called contract change function successfully");
+    z.console.log("Called contract change function successfully");
 
-  await keyStore.clear();
+    await keyStore.clear();
 
-  return [
-    {
-      id: new Date().toISOString(),
-      ...result,
-    },
-  ];
+    return [
+      {
+        id: new Date().toISOString(),
+        ...result,
+      },
+    ];
+  } catch (error: unknown) {
+    z.console.error(
+      `Error calling contract change function: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ChangeFunctionInput, ChangeFunctionResult>({
