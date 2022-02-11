@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -51,14 +52,34 @@ export const perform = async (
     )}`
   );
 
-  const codeChanges = await rpc.contractCodeChanges(
-    inputData.accountIds,
-    getBlockIDOrFinality(inputData)
-  );
+  try {
+    const codeChanges = await rpc.contractCodeChanges(
+      inputData.accountIds,
+      getBlockIDOrFinality(inputData)
+    );
 
-  z.console.log("Got contract code changes successfully");
+    z.console.log("Got contract code changes successfully");
 
-  return [{ id: new Date().toISOString(), ...codeChanges }];
+    return [{ id: new Date().toISOString(), ...codeChanges }];
+  } catch (error: unknown) {
+    z.console.error(
+      `Error getting contract code changes: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<

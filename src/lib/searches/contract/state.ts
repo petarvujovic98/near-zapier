@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { ViewStateResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -49,16 +50,34 @@ export const perform = async (
     `Getting contract state with input data: ${JSON.stringify(inputData)}`
   );
 
-  const state = await rpc.query<ViewStateResult>({
-    request_type: "view_code",
-    account_id: inputData.accountId,
-    prefix_base64: inputData.prefix ? encodeToBase64(inputData) : "",
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const state = await rpc.query<ViewStateResult>({
+      request_type: "view_code",
+      account_id: inputData.accountId,
+      prefix_base64: inputData.prefix ? encodeToBase64(inputData) : "",
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got contract state successfully");
+    z.console.log("Got contract state successfully");
 
-  return [{ id: new Date().toISOString(), ...state }];
+    return [{ id: new Date().toISOString(), ...state }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting contract state: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewContractStateInput, ViewContractStateResult>({

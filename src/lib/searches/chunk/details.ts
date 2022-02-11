@@ -1,6 +1,7 @@
 import { Bundle, ZObject } from "zapier-platform-core";
 import { providers } from "near-api-js";
 import { ChunkResult } from "near-api-js/lib/providers/provider";
+import { TypedError } from "near-api-js/lib/providers";
 
 import {
   ChunkIDField,
@@ -8,6 +9,7 @@ import {
   getNetwork,
   WithChunkID,
   WithNetworkSelection,
+  NetworkSelectField,
 } from "../../common";
 import {
   createSearch,
@@ -15,8 +17,6 @@ import {
   ErrorTypes,
   OutputItem,
 } from "../../../types";
-
-import { NetworkSelectField } from "./../../common/network";
 
 export interface ChunkDetailsInput extends WithChunkID, WithNetworkSelection {}
 
@@ -40,11 +40,29 @@ export async function perform(
 
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
 
-  const blockDetails = await rpc.chunk(getChunkID(inputData));
+  try {
+    const blockDetails = await rpc.chunk(getChunkID(inputData));
 
-  z.console.log("Got chunk details successfully");
+    z.console.log("Got chunk details successfully");
 
-  return [{ id: new Date().toISOString(), ...blockDetails }];
+    return [{ id: new Date().toISOString(), ...blockDetails }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting chunk details: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<ChunkDetailsInput, ChunkDetailsResponse>({

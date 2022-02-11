@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { AccessKeyView } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -48,16 +49,34 @@ export const perform = async (
     `Getting access key with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accessKey = await rpc.query<AccessKeyView>({
-    request_type: "view_access_key",
-    account_id: inputData.accountId,
-    public_key: inputData.accessKey,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const accessKey = await rpc.query<AccessKeyView>({
+      request_type: "view_access_key",
+      account_id: inputData.accountId,
+      public_key: inputData.accessKey,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got access key successfully");
+    z.console.log("Got access key successfully");
 
-  return [{ id: new Date().toISOString(), ...accessKey }];
+    return [{ id: new Date().toISOString(), ...accessKey }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting access key: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewAccessKeyInput, ViewAccessKeyResult>({

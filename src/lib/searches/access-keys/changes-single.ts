@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -50,14 +51,32 @@ export const perform = async (
     `Getting access key list with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accessKeyChanges = await rpc.singleAccessKeyChanges(
-    accountIdPublicKeyPairs,
-    getBlockIDOrFinality(inputData)
-  );
+  try {
+    const accessKeyChanges = await rpc.singleAccessKeyChanges(
+      accountIdPublicKeyPairs,
+      getBlockIDOrFinality(inputData)
+    );
 
-  z.console.log("Got access key list successfully");
+    z.console.log("Got access key list successfully");
 
-  return [{ id: new Date().toISOString(), ...accessKeyChanges }];
+    return [{ id: new Date().toISOString(), ...accessKeyChanges }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting access key list: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<

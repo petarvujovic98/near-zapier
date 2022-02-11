@@ -1,7 +1,13 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import { GenesisProtocolConfig } from "../../../types/genesis-config";
 import {
   getNetwork,
@@ -25,13 +31,31 @@ export async function perform(
     `Getting genesis config with input data: ${JSON.stringify(inputData)}`
   );
 
-  const result = (await rpc.experimental_protocolConfig({
-    sync_checkpoint: "genesis",
-  })) as GenesisProtocolConfig;
+  try {
+    const result = (await rpc.experimental_protocolConfig({
+      sync_checkpoint: "genesis",
+    })) as GenesisProtocolConfig;
 
-  z.console.log(`Got genesis config successfully`);
+    z.console.log(`Got genesis config successfully`);
 
-  return [{ id: new Date().toISOString(), ...result }];
+    return [{ id: new Date().toISOString(), ...result }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting genesis config: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<WithNetworkSelection, GenesisConfigResult>({

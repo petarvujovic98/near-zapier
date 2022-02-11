@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import {
   FunctionCallPermissionView,
   QueryResponseKind,
@@ -62,15 +63,33 @@ export const perform = async (
     `Getting access key list with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accessKeyList = await rpc.query<AccessKeyList>({
-    request_type: "view_access_key_list",
-    account_id: inputData.accountId,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const accessKeyList = await rpc.query<AccessKeyList>({
+      request_type: "view_access_key_list",
+      account_id: inputData.accountId,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got access key list successfully");
+    z.console.log("Got access key list successfully");
 
-  return [{ id: new Date().toISOString(), ...accessKeyList }];
+    return [{ id: new Date().toISOString(), ...accessKeyList }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting access key list: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewAccessKeyListInput, ViewAccessKeyListResult>({

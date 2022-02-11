@@ -1,8 +1,14 @@
 import { providers } from "near-api-js";
 import { Bundle, ZObject } from "zapier-platform-core";
 import { EpochValidatorInfo } from "near-api-js/lib/providers/provider";
+import { TypedError } from "near-api-js/lib/providers";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import {
   getNetwork,
   WithNetworkSelection,
@@ -31,11 +37,31 @@ export async function perform(
     `Getting validation status with input data: ${JSON.stringify(inputData)}`
   );
 
-  const info = await rpc.validators(inputData.blockId || null);
+  try {
+    const info = await rpc.validators(inputData.blockId || null);
 
-  z.console.log(`Got validation status successfully`);
+    z.console.log(`Got validation status successfully`);
 
-  return [{ id: new Date().toISOString(), ...info }];
+    return [{ id: new Date().toISOString(), ...info }];
+  } catch (error: unknown) {
+    z.console.error(
+      `Error getting validation status: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<WithNetworkSelection, ValidationStatusResponse>({

@@ -1,8 +1,14 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { NodeStatusResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import {
   getNetwork,
   WithNetworkSelection,
@@ -23,11 +29,29 @@ export async function perform(
     `Getting node status with input data: ${JSON.stringify(inputData)}`
   );
 
-  const status = await rpc.status();
+  try {
+    const status = await rpc.status();
 
-  z.console.log(`Got node status successfully`);
+    z.console.log(`Got node status successfully`);
 
-  return [{ id: new Date().toISOString(), ...status }];
+    return [{ id: new Date().toISOString(), ...status }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting node status: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<WithNetworkSelection, NodeStatusResponse>({

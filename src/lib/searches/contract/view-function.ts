@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { CodeResult } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -62,23 +63,43 @@ export const perform = async (
       ? encodeToBase64(JSON.stringify(inputData.arguments))
       : "";
 
-  const code = await rpc.query<CodeResult>({
-    request_type: "call_function",
-    account_id: inputData.accountId,
-    method_name: inputData.methodName,
-    args_base64,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const code = await rpc.query<CodeResult>({
+      request_type: "call_function",
+      account_id: inputData.accountId,
+      method_name: inputData.methodName,
+      args_base64,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Called contract function successfully");
+    z.console.log("Called contract function successfully");
 
-  return [
-    {
-      id: new Date().toISOString(),
-      ...code,
-      parsed_result: parseBuffer(code.result),
-    },
-  ];
+    return [
+      {
+        id: new Date().toISOString(),
+        ...code,
+        parsed_result: parseBuffer(code.result),
+      },
+    ];
+  } catch (error: unknown) {
+    z.console.error(
+      `Error calling contract function: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewFunctionInput, ViewFunctionResult>({

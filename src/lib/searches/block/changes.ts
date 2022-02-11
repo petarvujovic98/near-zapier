@@ -1,6 +1,7 @@
 import { Bundle, ZObject } from "zapier-platform-core";
 import { providers } from "near-api-js";
 import { BlockChangeResult } from "near-api-js/lib/providers/provider";
+import { TypedError } from "near-api-js/lib/providers";
 
 import {
   BlockIDOrFinalityField,
@@ -8,10 +9,14 @@ import {
   getNetwork,
   WithBlockIDOrFinality,
   WithNetworkSelection,
+  NetworkSelectField,
 } from "../../common";
-import { createSearch, OutputItem } from "../../../types";
-
-import { NetworkSelectField } from "./../../common/network";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 
 export interface BlockChangesInput
   extends WithBlockIDOrFinality,
@@ -29,11 +34,31 @@ export async function perform(
 
   const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
 
-  const blockDetails = await rpc.blockChanges(getBlockIDOrFinality(inputData));
+  try {
+    const blockDetails = await rpc.blockChanges(
+      getBlockIDOrFinality(inputData)
+    );
 
-  z.console.log("Got block details successfully");
+    z.console.log("Got block details successfully");
 
-  return [{ id: new Date().toISOString(), ...blockDetails }];
+    return [{ id: new Date().toISOString(), ...blockDetails }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting block details: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<BlockChangesInput, BlockChangesResponse>({

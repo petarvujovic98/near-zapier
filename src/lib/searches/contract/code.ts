@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { ContractCodeView } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -45,15 +46,33 @@ export const perform = async (
     `Getting contract code with input data: ${JSON.stringify(inputData)}`
   );
 
-  const code = await rpc.query<ContractCodeView>({
-    request_type: "view_code",
-    account_id: inputData.accountId,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const code = await rpc.query<ContractCodeView>({
+      request_type: "view_code",
+      account_id: inputData.accountId,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got contract code successfully");
+    z.console.log("Got contract code successfully");
 
-  return [{ id: new Date().toISOString(), ...code }];
+    return [{ id: new Date().toISOString(), ...code }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting contract code: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewContractCodeInput, ViewContractCodeResult>({

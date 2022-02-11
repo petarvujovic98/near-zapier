@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { AccountView } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -45,15 +46,33 @@ export const perform = async (
     `Getting account with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accountView = await rpc.query<AccountView>({
-    request_type: "view_account",
-    account_id: inputData.accountId,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const accountView = await rpc.query<AccountView>({
+      request_type: "view_account",
+      account_id: inputData.accountId,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got account successfully");
+    z.console.log("Got account successfully");
 
-  return [{ id: new Date().toISOString(), ...accountView }];
+    return [{ id: new Date().toISOString(), ...accountView }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting account: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewAccountInput, ViewAccountResult>({

@@ -1,3 +1,4 @@
+import { TypedError } from "near-api-js/lib/providers";
 import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
 import { Bundle, ZObject } from "zapier-platform-core";
 
@@ -68,21 +69,39 @@ export const perform = async (
     `Calling send tokens function with input data: ${JSON.stringify(logData)}`
   );
 
-  const result = await account.sendMoney(
-    inputData.accountId,
-    getYoctoNEAR(inputData.amount)
-  );
+  try {
+    const result = await account.sendMoney(
+      inputData.accountId,
+      getYoctoNEAR(inputData.amount)
+    );
 
-  z.console.log("Called send tokens function successfully");
+    z.console.log("Called send tokens function successfully");
 
-  await keyStore.clear();
+    await keyStore.clear();
 
-  return [
-    {
-      id: new Date().toISOString(),
-      ...result,
-    },
-  ];
+    return [
+      {
+        id: new Date().toISOString(),
+        ...result,
+      },
+    ];
+  } catch (error: unknown) {
+    z.console.error(`Error sending tokens: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<SendTokensInput, SendTokensResult>({

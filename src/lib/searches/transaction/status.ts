@@ -1,8 +1,13 @@
 import { providers } from "near-api-js";
-import { FinalExecutionOutcome } from "near-api-js/lib/providers";
+import { FinalExecutionOutcome, TypedError } from "near-api-js/lib/providers";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import {
   getNetwork,
   WithNetworkSelection,
@@ -33,11 +38,31 @@ export async function perform(
     `Getting transaction status with input data: ${JSON.stringify(inputData)}`
   );
 
-  const status = await rpc.txStatus(inputData.txHash, inputData.accountId);
+  try {
+    const status = await rpc.txStatus(inputData.txHash, inputData.accountId);
 
-  z.console.log(`Got transaction status successfully`);
+    z.console.log(`Got transaction status successfully`);
 
-  return [{ id: new Date().toISOString(), ...status }];
+    return [{ id: new Date().toISOString(), ...status }];
+  } catch (error: unknown) {
+    z.console.error(
+      `Error getting transaction status: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<TXStatusInput, TXStatusResult>({

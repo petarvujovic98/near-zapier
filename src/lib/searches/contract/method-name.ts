@@ -1,4 +1,5 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { ContractCodeView } from "near-api-js/lib/providers/provider";
 import { getMethodNames } from "near-contract-parser";
 import { Bundle, ZObject } from "zapier-platform-core";
@@ -50,15 +51,35 @@ export const perform = async (
     )}`
   );
 
-  const { code_base64 } = await rpc.query<ContractCodeView>({
-    request_type: "view_code",
-    account_id: inputData.accountId,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const { code_base64 } = await rpc.query<ContractCodeView>({
+      request_type: "view_code",
+      account_id: inputData.accountId,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got contract method names successfully");
+    z.console.log("Got contract method names successfully");
 
-  return getMethodNames(code_base64).map((name) => ({ id: name, name }));
+    return getMethodNames(code_base64).map((name) => ({ id: name, name }));
+  } catch (error: unknown) {
+    z.console.error(
+      `Error getting contract method names: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewMethodsInput, ViewMethodsResult>({

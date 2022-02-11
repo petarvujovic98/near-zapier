@@ -1,7 +1,13 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import { Receipt } from "../../../types/receipt";
 import {
   getNetwork,
@@ -27,13 +33,31 @@ export async function perform(
     `Getting receipt with input data: ${JSON.stringify(inputData)}`
   );
 
-  const receipt = await rpc.sendJsonRpc<Receipt>("EXPERIMENTAL_receipt", {
-    receipt_id: inputData.receiptId,
-  });
+  try {
+    const receipt = await rpc.sendJsonRpc<Receipt>("EXPERIMENTAL_receipt", {
+      receipt_id: inputData.receiptId,
+    });
 
-  z.console.log(`Got receipt successfully`);
+    z.console.log(`Got receipt successfully`);
 
-  return [{ id: new Date().toISOString(), ...receipt }];
+    return [{ id: new Date().toISOString(), ...receipt }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting receipt: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<ReceiptInput, ReceiptResult>({

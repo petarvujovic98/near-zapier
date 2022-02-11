@@ -1,7 +1,13 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import {
   getNetwork,
   WithNetworkSelection,
@@ -30,11 +36,31 @@ export async function perform(
     `Getting gas price with input data: ${JSON.stringify(inputData)}`
   );
 
-  const { gas_price: gasPrice } = await rpc.gasPrice(inputData.blockId || null);
+  try {
+    const { gas_price: gasPrice } = await rpc.gasPrice(
+      inputData.blockId || null
+    );
 
-  z.console.log(`Got gas price successfully`);
+    z.console.log(`Got gas price successfully`);
 
-  return [{ id: new Date().toISOString(), gasPrice }];
+    return [{ id: new Date().toISOString(), gasPrice }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting gas price: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<GasPriceInput, GasPriceResult>({

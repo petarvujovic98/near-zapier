@@ -1,7 +1,13 @@
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { Bundle, ZObject } from "zapier-platform-core";
 
-import { createSearch, OutputItem } from "../../../types";
+import {
+  createSearch,
+  ErrorTypeCodes,
+  ErrorTypes,
+  OutputItem,
+} from "../../../types";
 import { NetworkInfo } from "../../../types/network-info";
 import {
   getNetwork,
@@ -23,11 +29,29 @@ export async function perform(
     `Getting network info with input data: ${JSON.stringify(inputData)}`
   );
 
-  const info = await rpc.sendJsonRpc<NetworkInfo>("network_info", {});
+  try {
+    const info = await rpc.sendJsonRpc<NetworkInfo>("network_info", {});
 
-  z.console.log(`Got network info successfully`);
+    z.console.log(`Got network info successfully`);
 
-  return [{ id: new Date().toISOString(), ...info }];
+    return [{ id: new Date().toISOString(), ...info }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting network info: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 }
 
 export default createSearch<WithNetworkSelection, NetworkInfoResponse>({
