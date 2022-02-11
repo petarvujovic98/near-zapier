@@ -10,6 +10,10 @@ If you want to check out my code while reading, you can find the source code on
 You can also check out my YouTube playlist of the daily progress videos for this process
 [here](https://youtube.com/playlist?list=PL3ZFE2cBGD2MylJ-87DQPQJUjRSNiud5r).
 
+## Demo
+
+Here is a [link](https://youtu.be/MPbeg9DhGno) to the demo video of the integration.
+
 ## Overview
 
 Here is a rough outline of the items that will be covered in this article (you can go ahead
