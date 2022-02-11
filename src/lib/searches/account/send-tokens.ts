@@ -110,6 +110,7 @@ export default createSearch<SendTokensInput, SendTokensResult>({
   display: {
     label: "Send Tokens",
     description: "Allows you to send NEAR tokens to another account.",
+    important: true,
   },
   operation: {
     perform,

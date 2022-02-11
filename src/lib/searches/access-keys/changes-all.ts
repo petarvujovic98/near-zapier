@@ -85,7 +85,7 @@ export default createSearch<
   key: "viewAccessKeyChangesAll",
   noun: "Access Key Changes (All)",
   display: {
-    label: "View access key changes (all)",
+    label: "View Access Key Changes (All)",
     description:
       "Returns changes to all access keys of a specific block. Multiple accounts can be quereied by passing an array of account_ids.",
   },

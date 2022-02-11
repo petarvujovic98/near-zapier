@@ -61,10 +61,10 @@ export async function perform(
 
 export default createSearch<BlockDetailsInput, BlockDetailsResponse>({
   key: "blockDetails",
-  noun: "Block details",
+  noun: "Block Details",
 
   display: {
-    label: "Block details",
+    label: "Block Details",
     description:
       "Queries network and returns block for given height or hash. You can also use finality param to return latest block details.",
   },

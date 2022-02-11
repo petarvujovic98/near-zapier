@@ -86,10 +86,10 @@ export default createSearch<
   TXStatusWithReceitpsResult
 >({
   key: "txStatusReceipts",
-  noun: "Transaction Status with Receipts",
+  noun: "Transaction Status With Receipts",
 
   display: {
-    label: "Transaction Status with Receipts",
+    label: "Transaction Status With Receipts",
     description:
       "Queries status of a transaction by hash, returning the final transaction result and details of all receipts.",
   },

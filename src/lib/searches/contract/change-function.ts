@@ -150,6 +150,7 @@ export default createSearch<ChangeFunctionInput, ChangeFunctionResult>({
   display: {
     label: "Call a Contract Change Function",
     description: "Allows you to call a contract method as a change function.",
+    important: true,
   },
   operation: {
     perform,

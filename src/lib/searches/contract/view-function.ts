@@ -108,6 +108,7 @@ export default createSearch<ViewFunctionInput, ViewFunctionResult>({
   display: {
     label: "Call a Contract Function",
     description: "Allows you to call a contract method as a view function.",
+    important: true,
   },
   operation: {
     perform,

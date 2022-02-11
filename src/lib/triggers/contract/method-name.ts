@@ -9,6 +9,7 @@ import {
   createTrigger,
   ErrorTypeCodes,
   ErrorTypes,
+  FieldType,
 } from "../../../types";
 import {
   AccountIdField,
@@ -84,15 +85,18 @@ export const perform = async (
 
 export default createTrigger<ViewMethodsInput, ViewMethodsResult>({
   key: "getMethodNames",
-  noun: "Get method names",
+  noun: "Get Method Names",
   display: {
-    label: "Get method names",
+    label: "Get Method Names",
     description:
-      "Returns a list of method names on the contract for the provided account ID.",
+      "Triggers when selecting method names for the provided account ID.",
   },
   operation: {
     perform,
     inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    outputFields: [
+      { key: "name", label: "Method Name", type: FieldType.STRING },
+    ],
     sample: {
       id: "get_balance",
       name: "get_balance",

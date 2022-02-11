@@ -84,9 +84,9 @@ export const perform = async (
 
 export default createSearch<ViewMethodsInput, ViewMethodsResult>({
   key: "getMethodNames",
-  noun: "Get method names",
+  noun: "Get Method Names",
   display: {
-    label: "Get method names",
+    label: "Get Method Names",
     description:
       "Returns a list of method names on the contract for the provided account ID.",
   },

@@ -86,7 +86,7 @@ export default createSearch<
   key: "viewAccessKeyChangesSingle",
   noun: "Access Key Changes (Single)",
   display: {
-    label: "View access key changes (single)",
+    label: "View Access Key Changes (Single)",
     description:
       "Returns individual access key changes in a specific block. You can query multiple keys by passing an array of objects containing the account_id and public_key.",
   },
