@@ -6,7 +6,7 @@ export interface BasicDisplayVisible {
   /** A short blurb that can explain how to get this working. EG: how and where to copy-paste a static hook URL into your application. Only evaluated for static webhooks. */
   directions?: string;
   /** Affects how prominently this operation is displayed in the UI. Only mark a few of the most popular operations important. */
-  important?: string;
+  important?: boolean;
   /** Should this operation be unselectable by users? */
   hidden?: false;
 }
@@ -19,7 +19,7 @@ export interface BasicDisplayHidden {
   /** A short blurb that can explain how to get this working. EG: how and where to copy-paste a static hook URL into your application. Only evaluated for static webhooks. */
   directions?: string;
   /** Affects how prominently this operation is displayed in the UI. Only mark a few of the most popular operations important. */
-  important?: string;
+  important?: boolean;
   /** Should this operation be unselectable by users? */
   hidden: true;
 }
