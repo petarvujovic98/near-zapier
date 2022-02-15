@@ -119,3 +119,20 @@ export interface Authentication<
 
   sessionConfig?: SessionConfig;
 }
+
+/**
+ * Helper fucntion to create an authentication operation.
+ *
+ * @param  {Authentication} definition The authentication definition.
+ * @returns Authentication
+ */
+export function createAuth<
+  TestInput = unknown,
+  TestOutput = unknown,
+  LabelInput = unknown,
+  LabelOutput = unknown
+>(
+  definition: Authentication<TestInput, TestOutput, LabelInput, LabelOutput>
+): Authentication<TestInput, TestOutput, LabelInput, LabelOutput> {
+  return definition;
+}
