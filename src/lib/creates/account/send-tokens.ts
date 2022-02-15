@@ -1,65 +1,46 @@
-import * as BN from "bn.js";
 import { TypedError } from "near-api-js/lib/providers";
 import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
-import { Primitive } from "type-fest";
 import { Bundle, ZObject } from "zapier-platform-core";
 
 import {
   OutputItem,
-  createSearch,
   ErrorTypeCodes,
   ErrorTypes,
+  createCreate,
 } from "../../../types";
 import {
   AccountIdField,
   WithAccountId,
   NetworkSelectField,
   WithNetworkSelection,
-  WithBlockIDOrFinality,
-  BlockIDOrFinalityField,
-  WithArguments,
-  WithMethodName,
-  MethodNameField,
-  ArgumentsField,
   AccessKeyField,
-  DepositField,
-  WithDeposit,
-  GasField,
-  WithGas,
   setUpNEARWithPrivateKey,
   getYoctoNEAR,
+  WithAmount,
+  AmountField,
   validateAccountID,
 } from "../../common";
-import MethodName from "../../triggers/contract/method-name";
 
-export interface ChangeMethodOptions {
-  args: Record<string, Primitive>;
-  gas?: BN;
-  amount?: BN;
-  meta?: string;
-  callbackUrl?: string;
-}
-
-export interface ChangeFunctionInput
+export interface SendTokensInput
   extends WithNetworkSelection,
     WithAccountId,
-    WithArguments,
-    WithMethodName,
-    WithDeposit,
-    WithGas,
-    WithBlockIDOrFinality {
+    WithAmount {
   privateKey: string;
   senderAccountId: string;
 }
 
-export interface ChangeFunctionResult
-  extends FinalExecutionOutcome,
-    OutputItem {}
+export interface SendTokensResult extends FinalExecutionOutcome, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ChangeFunctionInput>
-): Promise<Array<ChangeFunctionResult>> => {
+  { inputData }: Bundle<SendTokensInput>
+): Promise<SendTokensResult> => {
+  const { near, keyStore } = await setUpNEARWithPrivateKey(inputData);
+
+  const account = await near.account(inputData.senderAccountId);
+
+  const { privateKey: _, amount: __, ...logData } = inputData;
+
   if (!validateAccountID(inputData.senderAccountId)) {
     throw new z.errors.Error(
       "Invalid sender account ID",
@@ -70,63 +51,37 @@ export const perform = async (
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
-      "Invalid contract ID",
+      "Invalid account ID",
       ErrorTypes.INVALID_DATA,
       ErrorTypeCodes.INVALID_DATA
     );
   }
 
-  if (inputData.gas && inputData.gas <= 0) {
+  if (inputData.amount <= 0) {
     throw new z.errors.Error(
-      "Invalid gas. Gas has to be greater than 0",
+      "Invalid amount. Amount has to be greater than 0",
       ErrorTypes.INVALID_DATA,
       ErrorTypeCodes.INVALID_DATA
     );
   }
-
-  if (inputData.deposit && inputData.deposit < 0) {
-    throw new z.errors.Error(
-      "Invalid deposit. Deposit has to be non negative",
-      ErrorTypes.INVALID_DATA,
-      ErrorTypeCodes.INVALID_DATA
-    );
-  }
-
-  const { near, keyStore } = await setUpNEARWithPrivateKey(inputData);
-
-  const account = await near.account(inputData.senderAccountId);
-
-  const { privateKey: _, deposit: __, ...logData } = inputData;
 
   z.console.log(
-    `Calling contract change function with input data: ${JSON.stringify(
-      logData
-    )}`
+    `Calling send tokens function with input data: ${JSON.stringify(logData)}`
   );
 
   try {
-    const result = await account.functionCall({
-      methodName: inputData.methodName,
-      args: inputData.arguments,
-      attachedDeposit: getYoctoNEAR(inputData.deposit),
-      contractId: inputData.accountId,
-      ...(inputData.gas ? { gas: getYoctoNEAR(inputData.gas) } : {}),
-    });
+    const result = await account.sendMoney(
+      inputData.accountId,
+      getYoctoNEAR(inputData.amount)
+    );
 
-    z.console.log("Called contract change function successfully");
+    z.console.log("Called send tokens function successfully");
 
     await keyStore.clear();
 
-    return [
-      {
-        id: new Date().toISOString(),
-        ...result,
-      },
-    ];
+    return { id: new Date().toISOString(), ...result };
   } catch (error: unknown) {
-    z.console.error(
-      `Error calling contract change function: ${JSON.stringify(error)}`
-    );
+    z.console.error(`Error sending tokens: ${JSON.stringify(error)}`);
 
     if (error instanceof TypedError) {
       throw new z.errors.Error(
@@ -144,26 +99,22 @@ export const perform = async (
   }
 };
 
-export default createSearch<ChangeFunctionInput, ChangeFunctionResult>({
-  key: "callChangeFunction",
-  noun: "Call a Contract Change Function",
+export default createCreate<SendTokensInput, SendTokensResult>({
+  key: "sendTokens",
+  noun: "Send Tokens",
   display: {
-    label: "Call a Contract Change Function",
-    description: "Allows you to call a contract method as a change function.",
+    label: "Send Tokens",
+    description: "Allows you to send NEAR tokens to another account.",
     important: true,
   },
   operation: {
     perform,
     inputFields: [
       NetworkSelectField,
-      BlockIDOrFinalityField,
       { ...AccountIdField, key: "senderAccountId", label: "Sender Account ID" },
       { ...AccessKeyField, key: "privateKey", label: "Private Key" },
       AccountIdField,
-      { ...MethodNameField, dynamic: `${MethodName.key}.id.name` },
-      ArgumentsField,
-      DepositField,
-      GasField,
+      AmountField,
     ],
     sample: {
       id: "1",

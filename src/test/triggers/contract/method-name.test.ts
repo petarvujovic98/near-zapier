@@ -5,7 +5,7 @@ import View, {
   ViewMethodsInput,
   ViewMethodsResult,
   perform as viewPerform,
-} from "../../../lib/searches/contract/method-name";
+} from "../../../lib/triggers/contract/method-name";
 import { PureFunctionTester } from "../../../types";
 
 describe("method name", () => {
@@ -17,7 +17,7 @@ describe("method name", () => {
     tools.env.inject();
     perform = (input) =>
       appTester(
-        App.searches[View.key].operation.perform as typeof viewPerform,
+        App.triggers[View.key].operation.perform as typeof viewPerform,
         input
       );
   });

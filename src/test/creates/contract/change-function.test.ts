@@ -2,23 +2,27 @@ import { UnencryptedFileSystemKeyStore } from "near-api-js/lib/key_stores";
 import { createAppTester, tools } from "zapier-platform-core";
 
 import App from "../../..";
-import Send, {
-  SendTokensInput,
-  SendTokensResult,
-  perform as sendPerform,
-} from "../../../lib/searches/account/send-tokens";
+import Change, {
+  ChangeFunctionInput,
+  ChangeFunctionResult,
+  perform as viewPerform,
+} from "../../../lib/creates/contract/change-function";
 import { PureFunctionTester } from "../../../types";
 
-describe("send tokens", () => {
+describe("change function", () => {
   let appTester: ReturnType<typeof createAppTester>;
-  let perform: PureFunctionTester<SendTokensInput, SendTokensResult>;
+  let perform: PureFunctionTester<
+    ChangeFunctionInput,
+    ChangeFunctionResult,
+    false
+  >;
 
   beforeEach(() => {
     appTester = createAppTester(App);
     tools.env.inject();
     perform = (input) =>
       appTester(
-        App.searches[Send.key].operation.perform as typeof sendPerform,
+        App.creates[Change.key].operation.perform as typeof viewPerform,
         input
       );
   });
@@ -28,19 +32,21 @@ describe("send tokens", () => {
       "/home/petar/.near-credentials"
     );
 
-    const keyPair = await keyStore.getKey(
-      "testnet",
-      "test.petarvujovic.testnet"
-    );
+    const keyPair = await keyStore.getKey("testnet", "petarvujovic.testnet");
 
     const privateKey = keyPair.toString().substring("ed25519:".length);
 
-    const [result] = await perform({
+    const result = await perform({
       inputData: {
-        accountId: "petarvujovic.testnet",
+        accountId: "museum.testnet",
+        methodName: "add_myself_as_contributor",
+        arguments: {},
+        deposit: 0,
+        gas: 0,
+      },
+      authData: {
         privateKey,
-        senderAccountId: "test.petarvujovic.testnet",
-        amount: 1,
+        accountId: "petarvujovic.testnet",
       },
     });
 
