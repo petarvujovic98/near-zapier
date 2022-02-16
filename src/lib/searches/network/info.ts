@@ -1,8 +1,9 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,

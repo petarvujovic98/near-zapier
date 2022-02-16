@@ -1,17 +1,16 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
 } from "../../../types";
 import {
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinality,
@@ -22,17 +21,16 @@ import {
 } from "../../common";
 
 export interface ViewAccessKeysChangesInput
-  extends WithNetworkSelection,
-    WithAccountIdArray,
+  extends WithAccountIdArray,
     WithBlockIDOrFinality {}
 
 export interface ViewAccessKeysChangesResult extends ChangeResult, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccessKeysChangesInput>
+  { inputData, authData }: Bundle<ViewAccessKeysChangesInput>
 ): Promise<Array<ViewAccessKeysChangesResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   inputData.accountIds.forEach((accountId) => {
     if (!validateAccountID(accountId)) {
@@ -84,18 +82,16 @@ export default createSearch<
 >({
   key: "viewAccessKeyChangesAll",
   noun: "Access Key Changes (All)",
+
   display: {
     label: "View Access Key Changes (All)",
     description:
       "Returns changes to all access keys of a specific block. Multiple accounts can be quereied by passing an array of account_ids.",
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      BlockIDOrFinalityField,
-      AccountIdArrayField,
-    ],
+    inputFields: [BlockIDOrFinalityField, AccountIdArrayField],
     sample: {
       id: "1",
       block_hash: "4kvqE1PsA6ic1LG7S5SqymSEhvjqGqumKjAxnVdNN3ZH",

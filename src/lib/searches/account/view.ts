@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { AccountView } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypes,
@@ -12,8 +13,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -22,17 +21,16 @@ import {
 } from "../../common";
 
 export interface ViewAccountInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithBlockIDOrFinality {}
 
 export interface ViewAccountResult extends AccountView, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccountInput>
+  { inputData, authData }: Bundle<ViewAccountInput>
 ): Promise<Array<ViewAccountResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -78,13 +76,15 @@ export const perform = async (
 export default createSearch<ViewAccountInput, ViewAccountResult>({
   key: "viewAccount",
   noun: "View Account",
+
   display: {
     label: "View Account",
     description: "Returns basic account information.",
   },
+
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    inputFields: [BlockIDOrFinalityField, AccountIdField],
     sample: {
       id: "1",
       amount: "399992611103597728750000000",

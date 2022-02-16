@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -11,8 +12,6 @@ import {
 } from "../../../types";
 import {
   AccountIdArrayField,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   BlockIDOrFinalityField,
@@ -25,8 +24,7 @@ import {
 } from "../../common";
 
 export interface ViewContractStateChangesInput
-  extends WithNetworkSelection,
-    WithAccountIdArray,
+  extends WithAccountIdArray,
     WithPrefix,
     WithBlockIDOrFinality {}
 
@@ -36,10 +34,8 @@ export interface ViewContractStateChangesResult
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewContractStateChangesInput>
+  { inputData, authData }: Bundle<ViewContractStateChangesInput>
 ): Promise<Array<ViewContractStateChangesResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
-
   inputData.accountIds.forEach((accountId) => {
     if (!validateAccountID(accountId)) {
       throw new z.errors.Error(
@@ -49,6 +45,8 @@ export const perform = async (
       );
     }
   });
+
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   z.console.log(
     `Getting contract state changes with input data: ${JSON.stringify(
@@ -93,19 +91,16 @@ export default createSearch<
 >({
   key: "viewContractStateChanges",
   noun: "View Contract State Changes",
+
   display: {
     label: "View Contract State Changes",
     description:
       "Returns the state change details of a contract based on the key prefix (encoded to base64). Pass an empty string for this param if you would like to return all state changes.",
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      BlockIDOrFinalityField,
-      AccountIdArrayField,
-      PrefixField,
-    ],
+    inputFields: [BlockIDOrFinalityField, AccountIdArrayField, PrefixField],
     sample: {
       id: "1",
       block_hash: "6U8Yd4JFZwJUNfqkD4KaKgTKmpNSmVRTSggpjmsRWdKY",

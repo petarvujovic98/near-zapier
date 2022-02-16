@@ -4,9 +4,10 @@ import {
   FunctionCallPermissionView,
   QueryResponseKind,
 } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -15,8 +16,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -39,17 +38,16 @@ export interface AccessKeyList extends QueryResponseKind {
 }
 
 export interface ViewAccessKeyListInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithBlockIDOrFinality {}
 
 export interface ViewAccessKeyListResult extends AccessKeyList, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccessKeyListInput>
+  { inputData, authData }: Bundle<ViewAccessKeyListInput>
 ): Promise<Array<ViewAccessKeyListResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -95,13 +93,15 @@ export const perform = async (
 export default createSearch<ViewAccessKeyListInput, ViewAccessKeyListResult>({
   key: "viewAccessKeyList",
   noun: "Access Key List",
+
   display: {
     label: "View Access Key List",
     description: "Returns all access keys for a given account.",
   },
+
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    inputFields: [BlockIDOrFinalityField, AccountIdField],
     sample: {
       id: "1",
       keys: [

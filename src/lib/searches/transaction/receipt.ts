@@ -1,32 +1,27 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
   OutputItem,
 } from "../../../types";
 import { Receipt } from "../../../types/receipt";
-import {
-  getNetwork,
-  WithNetworkSelection,
-  NetworkSelectField,
-  WithReceiptID,
-  ReceiptIDField,
-} from "../../common";
+import { getNetwork, WithReceiptID, ReceiptIDField } from "../../common";
 
-export interface ReceiptInput extends WithNetworkSelection, WithReceiptID {}
+export type ReceiptInput = WithReceiptID;
 
 export interface ReceiptResult extends Receipt, OutputItem {}
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<ReceiptInput>
+  { inputData, authData }: Bundle<ReceiptInput>
 ): Promise<Array<ReceiptResult>> {
   const rpc = new providers.JsonRpcProvider({
-    url: getNetwork(inputData),
+    url: getNetwork(authData),
   });
 
   z.console.log(
@@ -71,7 +66,7 @@ export default createSearch<ReceiptInput, ReceiptResult>({
   },
 
   operation: {
-    inputFields: [NetworkSelectField, ReceiptIDField],
+    inputFields: [ReceiptIDField],
     perform,
     sample: {
       id: new Date().toISOString(),

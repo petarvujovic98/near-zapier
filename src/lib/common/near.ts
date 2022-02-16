@@ -1,15 +1,13 @@
-import BN = require("bn.js");
+import BN from "bn.js";
 import { connect, Near } from "near-api-js";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
 import { KeyPairEd25519 } from "near-api-js/lib/utils";
 
-import { getNetwork, WithNetworkSelection } from "./network";
-
-import { NetworkType } from ".";
+import { WithAccountId } from "./account";
+import { getNetwork, WithNetworkSelection, NetworkType } from "./network";
 
 /** An interface that represents the parameters needed to set up a NEAR connection */
-export interface Config extends WithNetworkSelection {
-  senderAccountId: string;
+export interface Config extends WithNetworkSelection, WithAccountId {
   privateKey: string;
 }
 
@@ -28,7 +26,7 @@ export async function setUpNEARWithPrivateKey(
 
   keyStore.setKey(
     config.network || NetworkType.TESTNET,
-    config.senderAccountId,
+    config.accountId,
     keyPair
   );
 

@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ViewStateResult } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -12,8 +13,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -25,8 +24,7 @@ import {
 } from "../../common";
 
 export interface ViewContractStateInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithPrefix,
     WithBlockIDOrFinality {}
 
@@ -34,10 +32,8 @@ export interface ViewContractStateResult extends ViewStateResult, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewContractStateInput>
+  { inputData, authData }: Bundle<ViewContractStateInput>
 ): Promise<Array<ViewContractStateResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
-
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
       "Invalid account ID",
@@ -45,6 +41,8 @@ export const perform = async (
       ErrorTypeCodes.INVALID_DATA
     );
   }
+
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   z.console.log(
     `Getting contract state with input data: ${JSON.stringify(inputData)}`
@@ -83,19 +81,16 @@ export const perform = async (
 export default createSearch<ViewContractStateInput, ViewContractStateResult>({
   key: "viewContractState",
   noun: "View Contract State",
+
   display: {
     label: "View Contract State",
     description:
       "Returns the state (key value pairs) of a contract based on the key prefix (base64 encoded). Pass an empty string for prefix_base64 if you would like to return the entire state. Please note that the returned state will be base64 encoded as well.",
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      BlockIDOrFinalityField,
-      AccountIdField,
-      PrefixField,
-    ],
+    inputFields: [BlockIDOrFinalityField, AccountIdField, PrefixField],
     sample: {
       id: "1",
       values: [

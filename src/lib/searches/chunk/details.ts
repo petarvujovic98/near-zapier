@@ -1,30 +1,29 @@
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 import { providers } from "near-api-js";
 import { ChunkResult } from "near-api-js/lib/providers/provider";
 import { TypedError } from "near-api-js/lib/providers";
 
 import {
-  ChunkIDField,
-  getChunkID,
-  getNetwork,
-  WithChunkID,
-  WithNetworkSelection,
-  NetworkSelectField,
-} from "../../common";
-import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
   OutputItem,
 } from "../../../types";
+import {
+  ChunkIDField,
+  getChunkID,
+  getNetwork,
+  WithChunkID,
+} from "../../common";
 
-export interface ChunkDetailsInput extends WithChunkID, WithNetworkSelection {}
+export type ChunkDetailsInput = WithChunkID;
 
 export interface ChunkDetailsResponse extends ChunkResult, OutputItem {}
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<ChunkDetailsInput>
+  { inputData, authData }: Bundle<ChunkDetailsInput>
 ): Promise<Array<ChunkDetailsResponse>> {
   if (!inputData.chunkHash && !inputData.blockId && !inputData.shardId) {
     throw new z.errors.Error(
@@ -34,11 +33,11 @@ export async function perform(
     );
   }
 
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
+
   z.console.log(
     `Getting chunk details with input data: ${JSON.stringify(inputData)}`
   );
-
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
 
   try {
     const blockDetails = await rpc.chunk(getChunkID(inputData));
@@ -77,7 +76,7 @@ export default createSearch<ChunkDetailsInput, ChunkDetailsResponse>({
 
   operation: {
     perform,
-    inputFields: [NetworkSelectField, ChunkIDField],
+    inputFields: [ChunkIDField],
     sample: {
       id: "1",
       // author: "bitcat.pool.f863973.m0",

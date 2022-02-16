@@ -2,9 +2,10 @@ import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ContractCodeView } from "near-api-js/lib/providers/provider";
 import { getMethodNames } from "near-contract-parser";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createTrigger,
   ErrorTypeCodes,
@@ -14,8 +15,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -24,8 +23,7 @@ import {
 } from "../../common";
 
 export interface ViewMethodsInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithBlockIDOrFinality {}
 
 export interface ViewMethodsResult extends OutputItem {
@@ -34,9 +32,9 @@ export interface ViewMethodsResult extends OutputItem {
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewMethodsInput>
+  { inputData, authData }: Bundle<ViewMethodsInput>
 ): Promise<Array<ViewMethodsResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -86,14 +84,16 @@ export const perform = async (
 export default createTrigger<ViewMethodsInput, ViewMethodsResult>({
   key: "getMethodNames",
   noun: "Get Method Names",
+
   display: {
     label: "Get Method Names",
     description:
       "Triggers when selecting method names for the provided account ID.",
   },
+
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    inputFields: [BlockIDOrFinalityField, AccountIdField],
     outputFields: [
       { key: "name", label: "Method Name", type: FieldType.STRING },
     ],

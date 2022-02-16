@@ -1,38 +1,35 @@
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 import { providers } from "near-api-js";
 import { BlockResult } from "near-api-js/lib/providers/provider";
 import { TypedError } from "near-api-js/lib/providers";
 
 import {
-  BlockIDOrFinalityField,
-  getBlockIDOrFinality,
-  getNetwork,
-  WithBlockIDOrFinality,
-  WithNetworkSelection,
-  NetworkSelectField,
-} from "../../common";
-import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
   OutputItem,
 } from "../../../types";
+import {
+  BlockIDOrFinalityField,
+  getBlockIDOrFinality,
+  getNetwork,
+  WithBlockIDOrFinality,
+} from "../../common";
 
-export interface BlockDetailsInput
-  extends WithBlockIDOrFinality,
-    WithNetworkSelection {}
+export type BlockDetailsInput = WithBlockIDOrFinality;
 
 export interface BlockDetailsResponse extends BlockResult, OutputItem {}
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<BlockDetailsInput>
+  { inputData, authData }: Bundle<BlockDetailsInput>
 ): Promise<Array<BlockDetailsResponse>> {
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
+
   z.console.log(
     `Getting block details with input data: ${JSON.stringify(inputData)}`
   );
-
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
 
   try {
     const blockDetails = await rpc.block(getBlockIDOrFinality(inputData));
@@ -71,7 +68,7 @@ export default createSearch<BlockDetailsInput, BlockDetailsResponse>({
 
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField],
+    inputFields: [BlockIDOrFinalityField],
     sample: {
       id: "1",
       author: "bitcat.pool.f863973.m0",

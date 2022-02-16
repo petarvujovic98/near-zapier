@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { AccessKeyView } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -14,8 +15,6 @@ import {
   WithAccessKey,
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -24,8 +23,7 @@ import {
 } from "../../common";
 
 export interface ViewAccessKeyInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithAccessKey,
     WithBlockIDOrFinality {}
 
@@ -33,9 +31,9 @@ export interface ViewAccessKeyResult extends AccessKeyView, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccessKeyInput>
+  { inputData, authData }: Bundle<ViewAccessKeyInput>
 ): Promise<Array<ViewAccessKeyResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -82,20 +80,17 @@ export const perform = async (
 export default createSearch<ViewAccessKeyInput, ViewAccessKeyResult>({
   key: "viewAccessKey",
   noun: "Access Key",
+
   display: {
     label: "View Access Key",
     description: `
 			Returns information about a single access key for given account.
 			If permission of the key is FunctionCall, it will return more details such as the allowance, receiver_id, and method_names.`,
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      BlockIDOrFinalityField,
-      AccountIdField,
-      AccessKeyField,
-    ],
+    inputFields: [BlockIDOrFinalityField, AccountIdField, AccessKeyField],
     sample: {
       id: "1",
       nonce: 85,

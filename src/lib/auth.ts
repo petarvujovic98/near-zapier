@@ -1,11 +1,12 @@
 import { providers } from "near-api-js";
 import { KeyPairEd25519 } from "near-api-js/lib/utils";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 import { AccessKeyList } from "near-api-js/lib/providers/provider";
 import { TypedError } from "near-api-js/lib/providers";
 
 import {
   AuthenticationType,
+  Bundle,
   createAuth,
   ErrorTypeCodes,
   ErrorTypes,
@@ -19,12 +20,19 @@ import {
   NetworkType,
   AccountIdField,
   validateAccountID,
+  WithNetworkSelection,
+  WithAccountId,
 } from "./common";
+
+export interface AuthData extends WithNetworkSelection, WithAccountId {
+  privateKey: string;
+  networkUrl?: string;
+}
 
 export const perform = async (
   z: ZObject,
   { authData }: Bundle
-): Promise<{ [key: string]: string }> => {
+): Promise<AuthData> => {
   if (!validateAccountID(authData.accountId)) {
     throw new z.errors.Error(
       "Invalid account ID",
@@ -70,7 +78,10 @@ export const perform = async (
 
     z.console.log("Verified access key successfully");
 
-    return authData;
+    return {
+      ...(authData as Omit<AuthData, "networkUrl">),
+      networkUrl: getNetwork(authData.network as NetworkType),
+    };
   } catch (error: unknown) {
     z.console.error(
       `Error authenticating access key: ${JSON.stringify(error)}`

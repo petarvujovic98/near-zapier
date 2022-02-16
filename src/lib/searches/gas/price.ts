@@ -1,24 +1,17 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
   OutputItem,
 } from "../../../types";
-import {
-  getNetwork,
-  WithNetworkSelection,
-  NetworkSelectField,
-  BlockIDField,
-  WithBlockID,
-} from "../../common";
+import { getNetwork, BlockIDField, WithBlockID } from "../../common";
 
-export interface GasPriceInput
-  extends WithNetworkSelection,
-    Partial<WithBlockID> {}
+export type GasPriceInput = Partial<WithBlockID>;
 
 export interface GasPriceResult extends OutputItem {
   gasPrice: string;
@@ -26,10 +19,10 @@ export interface GasPriceResult extends OutputItem {
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<GasPriceInput>
+  { inputData, authData }: Bundle<GasPriceInput>
 ): Promise<Array<GasPriceResult>> {
   const rpc = new providers.JsonRpcProvider({
-    url: getNetwork(inputData),
+    url: getNetwork(authData),
   });
 
   z.console.log(
@@ -75,7 +68,7 @@ export default createSearch<GasPriceInput, GasPriceResult>({
   },
 
   operation: {
-    inputFields: [NetworkSelectField, BlockIDField],
+    inputFields: [BlockIDField],
     perform,
     sample: {
       id: new Date().toISOString(),

@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ContractCodeView } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -12,7 +13,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
   WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
@@ -30,10 +30,8 @@ export interface ViewContractCodeResult extends ContractCodeView, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewContractCodeInput>
+  { inputData, authData }: Bundle<ViewContractCodeInput>
 ): Promise<Array<ViewContractCodeResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
-
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
       "Invalid account ID",
@@ -41,6 +39,8 @@ export const perform = async (
       ErrorTypeCodes.INVALID_DATA
     );
   }
+
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   z.console.log(
     `Getting contract code with input data: ${JSON.stringify(inputData)}`
@@ -78,14 +78,16 @@ export const perform = async (
 export default createSearch<ViewContractCodeInput, ViewContractCodeResult>({
   key: "viewContractCode",
   noun: "View Contract Code",
+
   display: {
     label: "View Contract Code",
     description:
       "Returns the contract code (Wasm binary) deployed to the account. Please note that the returned code will be encoded in base64.",
   },
+
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    inputFields: [BlockIDOrFinalityField, AccountIdField],
     sample: {
       id: "1",
       code_base64: "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",

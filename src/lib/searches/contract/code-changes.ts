@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -11,8 +12,6 @@ import {
 } from "../../../types";
 import {
   AccountIdArrayField,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   BlockIDOrFinalityField,
@@ -22,8 +21,7 @@ import {
 } from "../../common";
 
 export interface ViewContractCodeChangesInput
-  extends WithNetworkSelection,
-    WithAccountIdArray,
+  extends WithAccountIdArray,
     WithBlockIDOrFinality {}
 
 export interface ViewContractCodeChangesResult
@@ -32,10 +30,8 @@ export interface ViewContractCodeChangesResult
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewContractCodeChangesInput>
+  { inputData, authData }: Bundle<ViewContractCodeChangesInput>
 ): Promise<Array<ViewContractCodeChangesResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
-
   inputData.accountIds.forEach((accountId) => {
     if (!validateAccountID(accountId)) {
       throw new z.errors.Error(
@@ -45,6 +41,8 @@ export const perform = async (
       );
     }
   });
+
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   z.console.log(
     `Getting contract code changes with input data: ${JSON.stringify(
@@ -88,18 +86,16 @@ export default createSearch<
 >({
   key: "viewContractCodeChanges",
   noun: "View Contract Code Changes",
+
   display: {
     label: "View Contract Code Changes",
     description:
       "Returns code changes made when deploying a contract. Change is returned is a base64 encoded WASM file.",
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      BlockIDOrFinalityField,
-      AccountIdArrayField,
-    ],
+    inputFields: [BlockIDOrFinalityField, AccountIdArrayField],
     sample: {
       id: "1",
       block_hash: "3yLNV5zdpzRJ8HP5xTXcF7jdFxuHnmKNUwWcok4616WZ",

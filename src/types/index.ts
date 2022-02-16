@@ -1,6 +1,7 @@
 export * from "./app";
 export * from "./authentication";
 export * from "./bulk-read";
+export * from "./bundle";
 export * from "./create";
 export * from "./display";
 export * from "./errors";

@@ -1,8 +1,9 @@
 import { providers } from "near-api-js";
 import { FinalExecutionOutcome, TypedError } from "near-api-js/lib/providers";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
@@ -10,8 +11,6 @@ import {
 } from "../../../types";
 import {
   getNetwork,
-  WithNetworkSelection,
-  NetworkSelectField,
   BlockIDField,
   WithTXHash,
   WithAccountId,
@@ -19,19 +18,16 @@ import {
   AccountIdField,
 } from "../../common";
 
-export interface TXStatusInput
-  extends WithNetworkSelection,
-    WithTXHash,
-    WithAccountId {}
+export interface TXStatusInput extends WithTXHash, WithAccountId {}
 
 export interface TXStatusResult extends FinalExecutionOutcome, OutputItem {}
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<TXStatusInput>
+  { inputData, authData }: Bundle<TXStatusInput>
 ): Promise<Array<TXStatusResult>> {
   const rpc = new providers.JsonRpcProvider({
-    url: getNetwork(inputData),
+    url: getNetwork(authData),
   });
 
   z.console.log(
@@ -76,12 +72,7 @@ export default createSearch<TXStatusInput, TXStatusResult>({
   },
 
   operation: {
-    inputFields: [
-      NetworkSelectField,
-      BlockIDField,
-      TXHashField,
-      AccountIdField,
-    ],
+    inputFields: [BlockIDField, TXHashField, AccountIdField],
     perform,
     sample: {
       id: new Date().toISOString(),

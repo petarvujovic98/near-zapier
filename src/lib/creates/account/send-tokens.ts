@@ -1,8 +1,9 @@
 import { TypedError } from "near-api-js/lib/providers";
 import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   ErrorTypeCodes,
   ErrorTypes,
@@ -11,9 +12,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
-  AccessKeyField,
   setUpNEARWithPrivateKey,
   getYoctoNEAR,
   WithAmount,
@@ -21,33 +19,17 @@ import {
   validateAccountID,
 } from "../../common";
 
-export interface SendTokensInput
-  extends WithNetworkSelection,
-    WithAccountId,
-    WithAmount {
-  privateKey: string;
-  senderAccountId: string;
-}
+export interface SendTokensInput extends WithAccountId, WithAmount {}
 
 export interface SendTokensResult extends FinalExecutionOutcome, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<SendTokensInput>
+  { inputData, authData }: Bundle<SendTokensInput>
 ): Promise<SendTokensResult> => {
-  const { near, keyStore } = await setUpNEARWithPrivateKey(inputData);
+  const { near, keyStore } = await setUpNEARWithPrivateKey(authData);
 
-  const account = await near.account(inputData.senderAccountId);
-
-  const { privateKey: _, amount: __, ...logData } = inputData;
-
-  if (!validateAccountID(inputData.senderAccountId)) {
-    throw new z.errors.Error(
-      "Invalid sender account ID",
-      ErrorTypes.INVALID_DATA,
-      ErrorTypeCodes.INVALID_DATA
-    );
-  }
+  const account = await near.account(authData.accountId);
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -66,7 +48,7 @@ export const perform = async (
   }
 
   z.console.log(
-    `Calling send tokens function with input data: ${JSON.stringify(logData)}`
+    `Calling send tokens function with input data: ${JSON.stringify(inputData)}`
   );
 
   try {
@@ -102,20 +84,16 @@ export const perform = async (
 export default createCreate<SendTokensInput, SendTokensResult>({
   key: "sendTokens",
   noun: "Send Tokens",
+
   display: {
     label: "Send Tokens",
     description: "Allows you to send NEAR tokens to another account.",
     important: true,
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      { ...AccountIdField, key: "senderAccountId", label: "Sender Account ID" },
-      { ...AccessKeyField, key: "privateKey", label: "Private Key" },
-      AccountIdField,
-      AmountField,
-    ],
+    inputFields: [AccountIdField, AmountField],
     sample: {
       id: "1",
       status: {

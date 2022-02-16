@@ -1,10 +1,11 @@
-import * as BN from "bn.js";
+import BN from "bn.js";
 import { TypedError } from "near-api-js/lib/providers";
 import { FinalExecutionOutcome } from "near-api-js/lib/providers/provider";
 import { Primitive } from "type-fest";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   ErrorTypeCodes,
   ErrorTypes,
@@ -13,15 +14,12 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   WithBlockIDOrFinality,
   BlockIDOrFinalityField,
   WithArguments,
   WithMethodName,
   MethodNameField,
   ArgumentsField,
-  AccessKeyField,
   DepositField,
   WithDeposit,
   GasField,
@@ -41,16 +39,12 @@ export interface ChangeMethodOptions {
 }
 
 export interface ChangeFunctionInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithArguments,
     WithMethodName,
     WithDeposit,
     WithGas,
-    WithBlockIDOrFinality {
-  privateKey: string;
-  senderAccountId: string;
-}
+    WithBlockIDOrFinality {}
 
 export interface ChangeFunctionResult
   extends FinalExecutionOutcome,
@@ -58,16 +52,8 @@ export interface ChangeFunctionResult
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ChangeFunctionInput>
+  { inputData, authData }: Bundle<ChangeFunctionInput>
 ): Promise<ChangeFunctionResult> => {
-  if (!validateAccountID(inputData.senderAccountId)) {
-    throw new z.errors.Error(
-      "Invalid sender account ID",
-      ErrorTypes.INVALID_DATA,
-      ErrorTypeCodes.INVALID_DATA
-    );
-  }
-
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
       "Invalid contract ID",
@@ -92,15 +78,13 @@ export const perform = async (
     );
   }
 
-  const { near, keyStore } = await setUpNEARWithPrivateKey(inputData);
+  const { near, keyStore } = await setUpNEARWithPrivateKey(authData);
 
-  const account = await near.account(inputData.senderAccountId);
-
-  const { privateKey: _, deposit: __, ...logData } = inputData;
+  const account = await near.account(authData.accountId);
 
   z.console.log(
     `Calling contract change function with input data: ${JSON.stringify(
-      logData
+      inputData
     )}`
   );
 
@@ -142,18 +126,17 @@ export const perform = async (
 export default createCreate<ChangeFunctionInput, ChangeFunctionResult>({
   key: "callChangeFunction",
   noun: "Call a Contract Change Function",
+
   display: {
     label: "Call a Contract Change Function",
     description: "Allows you to call a contract method as a change function.",
     important: true,
   },
+
   operation: {
     perform,
     inputFields: [
-      NetworkSelectField,
       BlockIDOrFinalityField,
-      { ...AccountIdField, key: "senderAccountId", label: "Sender Account ID" },
-      { ...AccessKeyField, key: "privateKey", label: "Private Key" },
       AccountIdField,
       { ...MethodNameField, dynamic: `${MethodName.key}.id.name` },
       ArgumentsField,

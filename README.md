@@ -34,6 +34,7 @@ to the conclusion at the end. **P.S.** Pro tip, also check out the tooling secti
     - [Typescript](#typescript)
     - [ESLint and Prettier](#eslint-and-prettier)
     - [Other dependencies](#other-dependencies)
+  - [Authentication](#authentication)
   - [Development](#development)
     - [NEAR docs](#near-docs)
     - [Input fields](#input-fields)
@@ -360,6 +361,146 @@ be using, namely:
 - [bn.js](https://www.npmjs.com/package/bn.js) a library for working with big numbers (and the types from [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) - [@types/bn.js](https://www.npmjs.com/package/@types/bn.js))
 - [type-fest](https://www.npmjs.com/package/type-fest) which is just a collection of utility types which I find useful
 
+### Authentication
+
+Zapier requires integrations to provide authentication mechanisms to be published. Since
+there is no classic authentication system in a blockchain (it is trustless), the next best
+thing was to provide users with an interface to save their account ID and private key for
+transactions, e.g. calling change methods or sending tokens.
+
+In order to test that those credentials are valid, we need to create a public key from the
+private key provided and query all the keys associated with that account to try and find a
+match.
+
+```typescript
+import { providers } from "near-api-js";
+import { KeyPairEd25519 } from "near-api-js/lib/utils";
+import { ZObject } from "zapier-platform-core";
+import { AccessKeyList } from "near-api-js/lib/providers/provider";
+import { TypedError } from "near-api-js/lib/providers";
+
+import {
+  AuthenticationType,
+  Bundle,
+  createAuth,
+  ErrorTypeCodes,
+  ErrorTypes,
+} from "../types";
+
+import {
+  AccessKeyField,
+  getBlockIDOrFinalityForQuery,
+  getNetwork,
+  NetworkSelectField,
+  NetworkType,
+  AccountIdField,
+  validateAccountID,
+  WithNetworkSelection,
+  WithAccountId,
+} from "./common";
+
+export interface AuthData extends WithNetworkSelection, WithAccountId {
+  privateKey: string;
+  networkUrl?: string;
+}
+
+export const perform = async (
+  z: ZObject,
+  { authData }: Bundle
+): Promise<AuthData> => {
+  if (!validateAccountID(authData.accountId)) {
+    throw new z.errors.Error(
+      "Invalid account ID",
+      ErrorTypes.INVALID_DATA,
+      ErrorTypeCodes.INVALID_DATA
+    );
+  }
+
+  const rpc = new providers.JsonRpcProvider({
+    url: getNetwork(authData.network as NetworkType),
+  });
+
+  const publicKey = new KeyPairEd25519(authData.privateKey)
+    .getPublicKey()
+    .toString();
+
+  const { privateKey: _, ...logData } = authData;
+
+  z.console.log(
+    `Verifying access key authentication with input data: ${JSON.stringify(
+      logData
+    )}`
+  );
+
+  try {
+    const { keys } = await rpc.query<AccessKeyList>({
+      request_type: "view_access_key_list",
+      account_id: authData.accountId,
+      ...getBlockIDOrFinalityForQuery({}),
+    });
+
+    const hasAccessKey = keys.some(
+      ({ public_key }) => public_key === publicKey
+    );
+
+    if (!hasAccessKey) {
+      throw new z.errors.Error(
+        "Access key not valid",
+        ErrorTypes.INVALID_DATA,
+        ErrorTypeCodes.INVALID_DATA
+      );
+    }
+
+    z.console.log("Verified access key successfully");
+
+    return {
+      ...(authData as Omit<AuthData, "networkUrl">),
+      networkUrl: getNetwork(authData.network as NetworkType),
+    };
+  } catch (error: unknown) {
+    z.console.error(
+      `Error authenticating access key: ${JSON.stringify(error)}`
+    );
+
+    if (error instanceof z.errors.Error) {
+      throw error;
+    }
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
+};
+
+export default createAuth({
+  type: AuthenticationType.CUSTOM,
+  test: perform,
+  fields: [
+    NetworkSelectField,
+    {
+      ...AccountIdField,
+      required: true,
+    },
+    {
+      ...AccessKeyField,
+      key: "privateKey",
+      label: "Private Key",
+      required: true,
+    },
+  ],
+});
+```
+
 ### Development
 
 The process of developing was comprised of the following main steps:
@@ -540,9 +681,9 @@ Here is what the logic of the `ViewAccount` action looks like:
 ```typescript
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccountInput>
+  { inputData, authData }: Bundle<ViewAccountInput>
 ): Promise<Array<ViewAccountResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -556,15 +697,33 @@ export const perform = async (
     `Getting account with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accountView = await rpc.query<AccountView>({
-    request_type: "view_account",
-    account_id: inputData.accountId,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const accountView = await rpc.query<AccountView>({
+      request_type: "view_account",
+      account_id: inputData.accountId,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got account successfully");
+    z.console.log("Got account successfully");
 
-  return [{ id: new Date().toISOString(), ...accountView }];
+    return [{ id: new Date().toISOString(), ...accountView }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting account: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 ```
 
@@ -615,13 +774,15 @@ them into the action:
 export default createSearch<ViewAccountInput, ViewAccountResult>({
   key: "viewAccount",
   noun: "View Account",
+
   display: {
     label: "View Account",
     description: "Returns basic account information.",
   },
+
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    inputFields: [BlockIDOrFinalityField, AccountIdField],
     sample: {
       id: "1",
       amount: "399992611103597728750000000",
@@ -643,10 +804,12 @@ looks:
 
 ```typescript
 import { providers } from "near-api-js";
+import { TypedError } from "near-api-js/lib/providers";
 import { AccountView } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypes,
@@ -655,8 +818,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -665,17 +826,16 @@ import {
 } from "../../common";
 
 export interface ViewAccountInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithBlockIDOrFinality {}
 
 export interface ViewAccountResult extends AccountView, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccountInput>
+  { inputData, authData }: Bundle<ViewAccountInput>
 ): Promise<Array<ViewAccountResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
@@ -689,27 +849,47 @@ export const perform = async (
     `Getting account with input data: ${JSON.stringify(inputData)}`
   );
 
-  const accountView = await rpc.query<AccountView>({
-    request_type: "view_account",
-    account_id: inputData.accountId,
-    ...getBlockIDOrFinalityForQuery(inputData),
-  });
+  try {
+    const accountView = await rpc.query<AccountView>({
+      request_type: "view_account",
+      account_id: inputData.accountId,
+      ...getBlockIDOrFinalityForQuery(inputData),
+    });
 
-  z.console.log("Got account successfully");
+    z.console.log("Got account successfully");
 
-  return [{ id: new Date().toISOString(), ...accountView }];
+    return [{ id: new Date().toISOString(), ...accountView }];
+  } catch (error: unknown) {
+    z.console.error(`Error getting account: ${JSON.stringify(error)}`);
+
+    if (error instanceof TypedError) {
+      throw new z.errors.Error(
+        error.message,
+        error.name,
+        ErrorTypeCodes.NEAR_API_JS
+      );
+    }
+
+    throw new z.errors.Error(
+      error.toString(),
+      ErrorTypes.UNKNOWN,
+      ErrorTypeCodes.NEAR_API_JS
+    );
+  }
 };
 
 export default createSearch<ViewAccountInput, ViewAccountResult>({
   key: "viewAccount",
   noun: "View Account",
+
   display: {
     label: "View Account",
     description: "Returns basic account information.",
   },
+
   operation: {
     perform,
-    inputFields: [NetworkSelectField, BlockIDOrFinalityField, AccountIdField],
+    inputFields: [BlockIDOrFinalityField, AccountIdField],
     sample: {
       id: "1",
       amount: "399992611103597728750000000",

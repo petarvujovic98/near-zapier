@@ -1,17 +1,16 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { ChangeResult } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
 } from "../../../types";
 import {
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinality,
@@ -23,17 +22,16 @@ import {
 } from "../../common";
 
 export interface ViewAccessKeyChangesInput
-  extends WithNetworkSelection,
-    WithAccountKeyArray,
+  extends WithAccountKeyArray,
     WithBlockIDOrFinality {}
 
 export interface ViewAccessKeyChangesResult extends ChangeResult, OutputItem {}
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewAccessKeyChangesInput>
+  { inputData, authData }: Bundle<ViewAccessKeyChangesInput>
 ): Promise<Array<ViewAccessKeyChangesResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   const accountIdPublicKeyPairs = getAccountIDPublicKeyPairs(inputData);
 
@@ -85,18 +83,16 @@ export default createSearch<
 >({
   key: "viewAccessKeyChangesSingle",
   noun: "Access Key Changes (Single)",
+
   display: {
     label: "View Access Key Changes (Single)",
     description:
       "Returns individual access key changes in a specific block. You can query multiple keys by passing an array of objects containing the account_id and public_key.",
   },
+
   operation: {
     perform,
-    inputFields: [
-      NetworkSelectField,
-      BlockIDOrFinalityField,
-      AccountKeyArrayField,
-    ],
+    inputFields: [BlockIDOrFinalityField, AccountKeyArrayField],
     sample: {
       id: "1",
       block_hash: "4kvqE1PsA6ic1LG7S5SqymSEhvjqGqumKjAxnVdNN3ZH",

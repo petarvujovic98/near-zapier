@@ -1,9 +1,10 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
 import { CodeResult } from "near-api-js/lib/providers/provider";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   OutputItem,
   createSearch,
   ErrorTypeCodes,
@@ -12,8 +13,6 @@ import {
 import {
   AccountIdField,
   WithAccountId,
-  NetworkSelectField,
-  WithNetworkSelection,
   getNetwork,
   WithBlockIDOrFinality,
   getBlockIDOrFinalityForQuery,
@@ -29,8 +28,7 @@ import {
 import MethodName from "../../triggers/contract/method-name";
 
 export interface ViewFunctionInput
-  extends WithNetworkSelection,
-    WithAccountId,
+  extends WithAccountId,
     WithArguments,
     WithMethodName,
     WithBlockIDOrFinality {}
@@ -42,10 +40,8 @@ export interface ViewFunctionResult extends CodeResult, OutputItem {
 
 export const perform = async (
   z: ZObject,
-  { inputData }: Bundle<ViewFunctionInput>
+  { inputData, authData }: Bundle<ViewFunctionInput>
 ): Promise<Array<ViewFunctionResult>> => {
-  const rpc = new providers.JsonRpcProvider({ url: getNetwork(inputData) });
-
   if (!validateAccountID(inputData.accountId)) {
     throw new z.errors.Error(
       "Invalid contract ID",
@@ -53,6 +49,8 @@ export const perform = async (
       ErrorTypeCodes.INVALID_DATA
     );
   }
+
+  const rpc = new providers.JsonRpcProvider({ url: getNetwork(authData) });
 
   z.console.log(
     `Calling contract function with input data: ${JSON.stringify(inputData)}`
@@ -105,15 +103,16 @@ export const perform = async (
 export default createSearch<ViewFunctionInput, ViewFunctionResult>({
   key: "callViewFunction",
   noun: "Call a Contract Function",
+
   display: {
     label: "Call a Contract Function",
     description: "Allows you to call a contract method as a view function.",
     important: true,
   },
+
   operation: {
     perform,
     inputFields: [
-      NetworkSelectField,
       BlockIDOrFinalityField,
       AccountIdField,
       { ...MethodNameField, dynamic: `${MethodName.key}.id.name` },

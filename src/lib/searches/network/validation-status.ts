@@ -1,25 +1,18 @@
 import { providers } from "near-api-js";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 import { EpochValidatorInfo } from "near-api-js/lib/providers/provider";
 import { TypedError } from "near-api-js/lib/providers";
 
 import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
   OutputItem,
 } from "../../../types";
-import {
-  getNetwork,
-  WithNetworkSelection,
-  NetworkSelectField,
-  WithBlockID,
-  BlockIDField,
-} from "../../common";
+import { getNetwork, WithBlockID, BlockIDField } from "../../common";
 
-export interface ValidationStatusInput
-  extends WithNetworkSelection,
-    Partial<WithBlockID> {}
+export type ValidationStatusInput = Partial<WithBlockID>;
 
 export interface ValidationStatusResponse
   extends EpochValidatorInfo,
@@ -27,10 +20,10 @@ export interface ValidationStatusResponse
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<ValidationStatusInput>
+  { inputData, authData }: Bundle<ValidationStatusInput>
 ): Promise<Array<ValidationStatusResponse>> {
   const rpc = new providers.JsonRpcProvider({
-    url: getNetwork(inputData),
+    url: getNetwork(authData),
   });
 
   z.console.log(
@@ -64,7 +57,7 @@ export async function perform(
   }
 }
 
-export default createSearch<WithNetworkSelection, ValidationStatusResponse>({
+export default createSearch<ValidationStatusInput, ValidationStatusResponse>({
   key: "validationStatus",
   noun: "Validation Status",
 
@@ -75,7 +68,7 @@ export default createSearch<WithNetworkSelection, ValidationStatusResponse>({
   },
 
   operation: {
-    inputFields: [NetworkSelectField, BlockIDField],
+    inputFields: [BlockIDField],
     perform,
     sample: {
       id: new Date().toISOString(),

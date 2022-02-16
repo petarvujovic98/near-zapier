@@ -1,8 +1,9 @@
 import { providers } from "near-api-js";
 import { TypedError } from "near-api-js/lib/providers";
-import { Bundle, ZObject } from "zapier-platform-core";
+import { ZObject } from "zapier-platform-core";
 
 import {
+  Bundle,
   createSearch,
   ErrorTypeCodes,
   ErrorTypes,
@@ -11,24 +12,21 @@ import {
 import { ProtocolConfig } from "../../../types/protocol-config";
 import {
   getNetwork,
-  WithNetworkSelection,
-  NetworkSelectField,
   WithBlockIDOrFinality,
   getBlockIDOrFinality,
+  BlockIDOrFinalityField,
 } from "../../common";
 
-export interface ProtocolConfigInput
-  extends WithNetworkSelection,
-    WithBlockIDOrFinality {}
+export type ProtocolConfigInput = WithBlockIDOrFinality;
 
 export interface ProtocolConfigResponse extends ProtocolConfig, OutputItem {}
 
 export async function perform(
   z: ZObject,
-  { inputData }: Bundle<ProtocolConfigInput>
+  { inputData, authData }: Bundle<ProtocolConfigInput>
 ): Promise<Array<ProtocolConfigResponse>> {
   const rpc = new providers.JsonRpcProvider({
-    url: getNetwork(inputData),
+    url: getNetwork(authData),
   });
 
   z.console.log(
@@ -73,7 +71,7 @@ export default createSearch<ProtocolConfigInput, ProtocolConfigResponse>({
   },
 
   operation: {
-    inputFields: [NetworkSelectField],
+    inputFields: [BlockIDOrFinalityField],
     perform,
     sample: {
       id: new Date().toISOString(),
