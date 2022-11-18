@@ -15,7 +15,7 @@
     "bn.js": "^5.2.0",
     "near-api-js": "^0.44.2",
     "near-contract-parser": "^0.1.4",
-    "zapier-platform-core": "11.2.0"
+    "zapier-platform-core": "11.3.3"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
